@@ -1,0 +1,6 @@
+# External CLI dependencies are resolved via PATH first, then config.toml fallbacks.
+# Python 3.11+ includes `tomllib` in the standard library.
+watchdog>=4.0.0
+rich>=13.7.0
+pycryptodome>=3.19.0
+pyctr>=0.7.0

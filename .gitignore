@@ -1,0 +1,47 @@
+# Local personal configuration files (track *.example.toml templates only)
+config.toml
+config.docker.toml
+!config.example.toml
+!config.docker.example.toml
+
+# External third-party binaries, console decryption keys, and license databases
+# Ignore EVERYTHING inside tools/ except tools/README.md
+tools/*
+!tools/README.md
+
+# Defensive catch-alls for sensitive console keys & license TSVs anywhere in the repo
+**/keys.txt
+**/aes_keys.txt
+**/boot9.bin
+**/prod.keys
+**/title.keys
+**/PSV_*.tsv
+
+# Pipeline runtime directories (auto-created by Project Mjolnir on startup)
+drop/
+processed/
+quarantine/
+.staging/
+
+# Python bytecode, test/lint caches & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Syncthing metadata, ignore rules & version history
+.stfolder/
+.stversions/
+.stignore
+
+# Logs, OS & editor artifacts
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+desktop.ini

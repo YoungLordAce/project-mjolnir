@@ -1,0 +1,279 @@
+# ==============================================================================
+# Project Mjolnir — Universal Automated ROM Ingestion Pipeline Configuration
+# ==============================================================================
+# QUICK START (5-Minute First-Time Setup):
+#   1. Copy this file to `config.toml` (gitignored so your local paths stay private).
+#   2. Edit ONLY the minimum required field for your OS below:
+#        - Windows: `[paths.windows]` -> `library_root`
+#        - Linux:   `[paths.linux]`   -> `library_root`
+#      (Optionally change `[paths]` -> `watch_dir` if you want to watch a folder
+#      other than `./drop`.)
+#   3. Run `python main.py doctor` to verify paths, binaries, and write access.
+#
+# Relative paths in this file are resolved relative to the directory containing
+# `config.toml`, so you can invoke `python main.py` from any working directory.
+
+[general]
+# What to do with original files/folders in `watch_dir` after verified arrival in `library_root`:
+#   "move"   -> Move source item into `processed_dir` (recommended safe default while testing)
+#   "delete" -> Permanently delete source item from `watch_dir`
+post_process_action = "move"
+
+# Watcher stability polling before enqueueing a newly dropped file or folder
+# (prevents ingesting half-finished downloads or network transfers)
+stability_poll_seconds = 2.0
+stability_checks_required = 3
+
+# Minimum free local disk space (in GiB) required in `staging_dir` before extraction
+min_free_staging_gb = 5.0
+
+[paths]
+# Local pipeline working folders (auto-created on first run).
+# Change `watch_dir` if you want Mjolnir to monitor a custom downloads/intake folder.
+watch_dir = "./drop"
+staging_dir = "./.staging"
+processed_dir = "./processed"
+quarantine_dir = "./quarantine"
+
+[paths.windows]
+# REQUIRED ON WINDOWS: Destination root folder for your organized ROM library.
+# Supports a local folder, mapped network drive, or UNC share:
+#   - Local folder:   'D:\Emulation\roms'
+#   - Mapped drive:   'Z:\games\library\roms'
+#   - UNC share:      '\\my-nas\games\library\roms'
+library_root = 'Z:\games\library\roms'
+
+[paths.linux]
+# REQUIRED ON LINUX: Destination root folder for your organized ROM library.
+# Supports ANY of:
+#   1. Local directory or standard CIFS/NFS fstab mount:
+#      "/mnt/nas/games/library/roms"
+#   2. Direct SMB URI (auto-resolved via GNOME GVFS `/run/user/$UID/gvfs/`):
+#      "smb://my-nas.local/games/library/roms"
+library_root = "/mnt/nas/games/library/roms"
+
+# If `library_root` is an `smb://` URI and not yet mounted in GNOME Files, attempt
+# non-interactive `gio mount smb://<host>/<share>` automatically using saved keyring creds.
+auto_mount_smb = true
+
+# ==============================================================================
+# External CLI Binaries & Optional Console Keys (Auto-Detected)
+# ==============================================================================
+# You usually DO NOT need to edit the `[binaries.*]` sections below.
+# Mjolnir automatically checks paths listed here AND your system `PATH`.
+# Place optional third-party binaries or user-dumped keys into `./tools/`
+# (see `tools/README.md` for exact locations).
+
+[binaries.windows]
+# Checked alongside your system PATH (`shutil.which()`).
+seven_zip = [
+    "./tools/7z/7z.exe",
+    'C:\Program Files\7-Zip\7z.exe',
+    'C:\Program Files (x86)\7-Zip\7z.exe',
+]
+chdman = ["./tools/chdman/chdman.exe"]
+dolphin_tool = [
+    "./tools/dolphin/DolphinTool.exe",
+    'C:\Program Files\Dolphin-x64\DolphinTool.exe',
+]
+squirrel = ["./tools/nscb/ztools/squirrel.exe"]
+squirrel_keys = "./tools/nscb/ztools/keys.txt"
+psxpackager = ["./tools/psxpackager/psxpackager.exe"]
+ctr_keys = [
+    "./tools/3ds/aes_keys.txt",
+    "./tools/3ds/boot9.bin",
+    "./tools/3ds/keys.txt",
+    "~/AppData/Roaming/Azahar/sysdata/aes_keys.txt",
+    "~/AppData/Roaming/Citra/sysdata/aes_keys.txt",
+]
+zarchive = ["./tools/wiiu/zarchive.exe"]
+cdecrypt = ["./tools/wiiu/cdecrypt.exe"]
+pkg2zip = ["./tools/psvita/pkg2zip.exe"]
+
+[binaries.linux]
+# Example package install (Fedora): `sudo dnf install 7zip mame-tools dolphin-emu-tool dotnet-runtime-10.0`
+# Note: Some Linux distro `7z` packages exclude proprietary RAR codecs due to licensing.
+# Placing the official standalone `7zz` binary (https://www.7-zip.org/download.html)
+# in `./tools/7z/7zz` or on PATH enables full `.rar` support.
+seven_zip = [
+    "./tools/7z/7zz",
+    "7zz",
+    "7z",
+    "7za",
+    "/usr/local/bin/7zz",
+    "/usr/bin/7zz",
+    "/usr/bin/7z",
+    "/usr/bin/7za",
+]
+chdman = ["chdman", "/usr/bin/chdman"]
+dolphin_tool = ["dolphin-tool", "DolphinTool", "/usr/bin/dolphin-tool"]
+squirrel = ["./tools/nscb/ztools/squirrel.py", "./tools/nscb/py/ztools/squirrel.py", "./tools/nscb/squirrel.py", "nsz"]
+squirrel_keys = "./tools/nscb/ztools/keys.txt"
+psxpackager = [
+    "./tools/psxpackager/psxpackager",
+    "psxpackager",
+    "/usr/local/bin/psxpackager",
+    "/usr/bin/psxpackager",
+]
+ctr_keys = [
+    "./tools/3ds/aes_keys.txt",
+    "./tools/3ds/boot9.bin",
+    "./tools/3ds/keys.txt",
+    "~/.local/share/azahar-emu/sysdata/aes_keys.txt",
+    "~/.local/share/citra-emu/sysdata/aes_keys.txt",
+]
+zarchive = ["./tools/wiiu/zarchive", "zarchive", "/usr/local/bin/zarchive", "/usr/bin/zarchive"]
+cdecrypt = ["./tools/wiiu/cdecrypt", "cdecrypt", "/usr/local/bin/cdecrypt", "/usr/bin/cdecrypt"]
+pkg2zip = ["./tools/psvita/pkg2zip", "pkg2zip", "/usr/local/bin/pkg2zip", "/usr/bin/pkg2zip"]
+
+# ==============================================================================
+# Format Conversion & Frontend Options (Sensible Defaults — Optional to Edit)
+# ==============================================================================
+[conversion]
+# PlayStation 1 Multi-Disc (.pbp):
+#   - Single-disc PS1 games convert to `.chd` via `chdman createcd`.
+#   - Multi-disc PS1 games merge into a single `<Game Title>.pbp` via `psxpackager` so
+#     standalone DuckStation + frontends (like Cocoon FE) launch cleanly without Android SAF `.m3u` issues.
+psx_multidisc_pbp = true
+psx_pbp_compression_level = 5
+
+# PSP: Convert `.iso` -> `.chd` via `chdman createdvd -hs 2048` (PPSSPP optimal 2 KiB hunk size)
+psp_to_chd = true
+psp_hunk_size = 2048
+
+# GameCube / Wii: `DolphinTool convert -f rvz -b 131072 -c zstd -l 5`
+rvz_block_size = 131072
+rvz_compression = "zstd"
+rvz_compression_level = 5
+
+# Nintendo Switch:
+#   - Multiple Switch files in one archive/folder -> merged into single `.xci` via `squirrel`
+#   - Single `.nsz`/`.xcz` -> decompressed to `.nsp`/`.xci` for emulators that require uncompressed images
+switch_merge_format = "xci"
+decompress_nsz = true
+
+# Nintendo 3DS (Azahar / Citra):
+#   - Azahar uses `.cci` for decrypted cartridge dumps.
+#   - Install-only `.cia` updates/DLC route to `3ds/_cia_install` (hidden from top-level frontend scanners).
+rename_3ds_to_cci = true
+cia_subdir = "_cia_install"
+
+# Multi-Disc Playlists (.m3u):
+#   - Stores raw `(Disc 1..N)` files inside `_discs/` to hide duplicate disc entries from
+#     top-level scanners while exposing a single `<Game Title>.m3u` using POSIX relative paths.
+generate_m3u = true
+multidisc_subdir = "_discs"
+
+# Nintendo Wii U (Cemu):
+#   - Packs decrypted Loadiine folders (`code/`, `content/`, `meta/`) into a single compressed
+#     `.wua` archive whenever `zarchive` is available (falls back to routing clean folders otherwise).
+wiiu_to_wua = true
+
+# PlayStation Vita (Vita3K):
+#   - Repacks extracted NoNpDrm / MaiDump / Vitamin folders (`sce_sys/param.sfo`) and Sony `.pkg`
+#     packages into clean Vita3K-installable `<Title> [<TitleID>] [v<Ver>].zip` archives, and
+#     generates a companion `<Title>.dpt` tag (`[vita_game_id] <TitleID>`) in `psvita/`.
+#   - Standalone Update (`gp`) and DLC (`ac`) packages route to `psvita/_updates_dlc`.
+vita_repack_zip = true
+vita_addons_subdir = "_updates_dlc"
+
+# ==============================================================================
+# System Routing & Archive Policies
+# ==============================================================================
+# `folder`: Subdirectory created inside `library_root` (e.g. `<library_root>/<folder>`)
+# `archive_policy`:
+#   - "passthrough" -> Never extract archive (Arcade: FBNeo, CPS1/2/3, Neo Geo)
+#   - "extract"     -> Extract ROM/image from archive before conversion/routing
+#   - "keep_zip"    -> Keep single-ROM `.zip` intact (re-extract `.7z`/`.rar` to raw or zip)
+
+[systems.cps1]
+folder = "cps1"
+archive_policy = "passthrough"
+
+[systems.cps2]
+folder = "cps2"
+archive_policy = "passthrough"
+
+[systems.cps3]
+folder = "cps3"
+archive_policy = "passthrough"
+
+[systems.neogeo]
+folder = "neogeo"
+archive_policy = "passthrough"
+
+[systems.fbneo]
+folder = "fbneo"
+archive_policy = "passthrough"
+
+[systems.psx]
+folder = "psx"
+archive_policy = "extract"
+
+[systems.ps2]
+folder = "ps2"
+archive_policy = "extract"
+
+[systems.psp]
+folder = "psp"
+archive_policy = "extract"
+
+[systems.gc]
+folder = "gc"
+archive_policy = "extract"
+
+[systems.wii]
+folder = "wii"
+archive_policy = "extract"
+
+[systems.switch]
+folder = "switch"
+archive_policy = "extract"
+
+[systems.3ds]
+folder = "3ds"
+archive_policy = "extract"
+
+[systems.nds]
+folder = "nds"
+archive_policy = "extract"
+
+[systems.gba]
+folder = "gba"
+archive_policy = "extract"
+
+[systems.n64]
+folder = "n64"
+archive_policy = "extract"
+
+[systems.snes]
+folder = "snes"
+archive_policy = "extract"
+
+[systems.nes]
+folder = "nes"
+archive_policy = "extract"
+
+[systems.saturn]
+folder = "saturn"
+archive_policy = "extract"
+
+[systems.dreamcast]
+folder = "dreamcast"
+archive_policy = "extract"
+
+[systems.segacd]
+folder = "segacd"
+archive_policy = "extract"
+
+[systems.pcenginecd]
+folder = "pcenginecd"
+archive_policy = "extract"
+
+[systems.wiiu]
+folder = "wiiu"
+archive_policy = "extract"
+
+[systems.psvita]
+folder = "psvita"
+archive_policy = "extract"

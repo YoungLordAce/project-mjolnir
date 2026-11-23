@@ -1,0 +1,163 @@
+# ==============================================================================
+# Project Mjolnir — Docker Container Configuration Example
+# ==============================================================================
+# QUICK START (Docker / Headless NAS Deployment):
+#   1. Copy this file to `config.docker.toml` (gitignored so local tweaks stay private).
+#   2. In most Docker Compose setups, you DO NOT need to edit the container paths below —
+#      instead, bind-mount your host folders to:
+#        - `/app/drop`       (watch_dir — where you or ROMarr drop incoming ROMs)
+#        - `/library`        (library_root — destination ROM library on your NAS/server)
+#        - `/app/processed`  (completed originals when `post_process_action = "move"`)
+#        - `/app/quarantine` (unidentified or encrypted files needing attention)
+#        - `/app/tools`      (optional read-only mount for keys, `psxpackager`, `PSV_*.tsv`)
+#   3. Verify inside the container with:
+#        docker exec mjolnir /app/.venv/bin/python /app/main.py --config /app/config.docker.toml doctor
+#
+# Kept separate from `config.toml` so desktop/workstation configs stay untouched.
+
+[general]
+# "move" moves originals to `processed_dir` after verified arrival; "delete" removes them.
+post_process_action = "move"
+stability_poll_seconds = 2.0
+stability_checks_required = 3
+min_free_staging_gb = 5.0
+
+[paths]
+# Container-internal paths (bind-mount host volumes here in `docker-compose.yml`)
+watch_dir = "/app/drop"
+staging_dir = "/app/.staging"
+processed_dir = "/app/processed"
+quarantine_dir = "/app/quarantine"
+
+[paths.linux]
+# Bind-mount your host ROM library directory to `/library` in Docker Compose
+library_root = "/library"
+auto_mount_smb = false
+
+[binaries.linux]
+# Pre-installed inside the Dockerfile image (`7zz`, `chdman`, `dolphin-tool`, `zarchive`,
+# `cdecrypt`, `pkg2zip`, `squirrel.py`), plus optional host-mounted tools/keys under `/app/tools/`.
+seven_zip = ["/usr/local/bin/7zz", "7zz"]
+chdman = ["/usr/bin/chdman", "chdman"]
+dolphin_tool = ["/usr/bin/dolphin-tool", "dolphin-tool"]
+squirrel = ["/opt/nscb/ztools/squirrel.py", "nsz"]
+squirrel_keys = "/app/tools/nscb/ztools/keys.txt"
+psxpackager = ["/app/tools/psxpackager/psxpackager", "psxpackager"]
+ctr_keys = [
+    "/app/tools/3ds/aes_keys.txt",
+    "/app/tools/3ds/boot9.bin",
+    "/app/tools/3ds/keys.txt",
+]
+zarchive = ["/app/tools/wiiu/zarchive", "/usr/local/bin/zarchive", "/usr/bin/zarchive", "zarchive"]
+cdecrypt = ["/app/tools/wiiu/cdecrypt", "/usr/local/bin/cdecrypt", "/usr/bin/cdecrypt", "cdecrypt"]
+pkg2zip = ["/app/tools/psvita/pkg2zip", "/usr/local/bin/pkg2zip", "/usr/bin/pkg2zip", "pkg2zip"]
+
+[conversion]
+psx_multidisc_pbp = true
+psx_pbp_compression_level = 5
+psp_to_chd = true
+psp_hunk_size = 2048
+rvz_block_size = 131072
+rvz_compression = "zstd"
+rvz_compression_level = 5
+switch_merge_format = "xci"
+decompress_nsz = true
+rename_3ds_to_cci = true
+cia_subdir = "_cia_install"
+generate_m3u = true
+multidisc_subdir = "_discs"
+wiiu_to_wua = true
+vita_repack_zip = true
+vita_addons_subdir = "_updates_dlc"
+
+[systems.cps1]
+folder = "cps1"
+archive_policy = "passthrough"
+
+[systems.cps2]
+folder = "cps2"
+archive_policy = "passthrough"
+
+[systems.cps3]
+folder = "cps3"
+archive_policy = "passthrough"
+
+[systems.neogeo]
+folder = "neogeo"
+archive_policy = "passthrough"
+
+[systems.fbneo]
+folder = "fbneo"
+archive_policy = "passthrough"
+
+[systems.psx]
+folder = "psx"
+archive_policy = "extract"
+
+[systems.ps2]
+folder = "ps2"
+archive_policy = "extract"
+
+[systems.psp]
+folder = "psp"
+archive_policy = "extract"
+
+[systems.gc]
+folder = "gc"
+archive_policy = "extract"
+
+[systems.wii]
+folder = "wii"
+archive_policy = "extract"
+
+[systems.switch]
+folder = "switch"
+archive_policy = "extract"
+
+[systems.3ds]
+folder = "3ds"
+archive_policy = "extract"
+
+[systems.nds]
+folder = "nds"
+archive_policy = "extract"
+
+[systems.gba]
+folder = "gba"
+archive_policy = "extract"
+
+[systems.n64]
+folder = "n64"
+archive_policy = "extract"
+
+[systems.snes]
+folder = "snes"
+archive_policy = "extract"
+
+[systems.nes]
+folder = "nes"
+archive_policy = "extract"
+
+[systems.saturn]
+folder = "saturn"
+archive_policy = "extract"
+
+[systems.dreamcast]
+folder = "dreamcast"
+archive_policy = "extract"
+
+[systems.segacd]
+folder = "segacd"
+archive_policy = "extract"
+
+[systems.pcenginecd]
+folder = "pcenginecd"
+archive_policy = "extract"
+
+[systems.wiiu]
+folder = "wiiu"
+archive_policy = "extract"
+
+[systems.psvita]
+folder = "psvita"
+archive_policy = "extract"
