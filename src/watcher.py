@@ -40,6 +40,7 @@ from src.identifier import (
     _find_pkg_license_companions,
     parse_cue_tracks,
     parse_gdi_tracks,
+    sanitize_rom_stem,
 )
 from src.models import PipelineConfig, RoutingOutcome
 from src.router import (
@@ -50,7 +51,9 @@ from src.router import (
 )
 from src.runner import terminate_active_subprocesses
 from src.switch_bundler import (
+    SwitchContentRole,
     SwitchSourceInfo,
+    _normalize_switch_title_key,
     find_nas_switch_family_files,
     group_candidates_with_switch_families,
     probe_switch_source,
@@ -658,7 +661,9 @@ class PipelineWatcher:
 
         active_downloads = has_pending or has_active_downloads_in_dir(watch_root)
         switch_buckets: dict[str, list[tuple[Path, SwitchSourceInfo]]] = {}
+        untagged_switch_items: list[tuple[Path, SwitchSourceInfo]] = []
         multidisc_buckets: dict[str, tuple[str, list[tuple[int, Path]]]] = {}
+        immediate_singles: list[Path] = []
 
         for p in ready_snapshot:
             info = (
@@ -666,8 +671,11 @@ class PipelineWatcher:
                 if "switch" in self.config.systems
                 else None
             )
-            if info is not None and info.primary_family_id is not None:
-                switch_buckets.setdefault(info.primary_family_id, []).append((p, info))
+            if info is not None:
+                if info.primary_family_id is not None:
+                    switch_buckets.setdefault(info.primary_family_id, []).append((p, info))
+                else:
+                    untagged_switch_items.append((p, info))
                 continue
 
             md_info = probe_multidisc_source_title(p)
@@ -679,6 +687,42 @@ class PipelineWatcher:
                 multidisc_buckets[key][1].append((disc_num, p))
                 continue
 
+            immediate_singles.append(p)
+
+        # Secondary title-stem association: pair untagged Switch sources (e.g. No-Intro `.xci`
+        # inside `.7z`) with any TitleID-bearing sibling bucket sharing the same clean game title.
+        remaining_untagged_switch: list[tuple[Path, SwitchSourceInfo]] = []
+        for u_path, u_info in untagged_switch_items:
+            raw_u_name = u_path.name if u_path.is_dir() else u_path.stem
+            u_stem = sanitize_rom_stem(raw_u_name).lower()
+            u_key = _normalize_switch_title_key(raw_u_name)
+            matched_fam: str | None = None
+            if u_stem or u_key:
+                for fam_id, bucket_pairs in switch_buckets.items():
+                    for bp, _ in bucket_pairs:
+                        b_raw = bp.name if bp.is_dir() else bp.stem
+                        if u_stem and sanitize_rom_stem(b_raw).lower() == u_stem:
+                            matched_fam = fam_id
+                            break
+                        if u_key and _normalize_switch_title_key(b_raw) == u_key:
+                            matched_fam = fam_id
+                            break
+                    if matched_fam is not None:
+                        break
+            if matched_fam is not None:
+                augmented = SwitchSourceInfo(
+                    path=u_info.path,
+                    family_ids=(matched_fam,),
+                    roles=u_info.roles or frozenset({SwitchContentRole.BASE}),
+                    title_ids=u_info.title_ids or (matched_fam,),
+                    package_count=u_info.package_count,
+                )
+                switch_buckets[matched_fam].append((u_path, augmented))
+            else:
+                remaining_untagged_switch.append((u_path, u_info))
+
+        # Queue non-Switch single items immediately
+        for p in immediate_singles:
             with self._lock:
                 if p in self._ready_buffer and p not in self._queued_or_active:
                     self._ready_buffer.remove(p)
@@ -687,6 +731,29 @@ class PipelineWatcher:
                     self._log(f"Queued: {p.name}")
                     self.job_queue.put(("single", (p,)))
 
+        untagged_hold_keys: set[str] = set()
+        for u_path, _ in remaining_untagged_switch:
+            raw_u_name = u_path.name if u_path.is_dir() else u_path.stem
+            u_key = _normalize_switch_title_key(raw_u_name) or u_path.name.lower()
+            untagged_hold_keys.add(u_key)
+            if active_downloads:
+                hold_key = f"untagged_sw:{u_key}"
+                if hold_key not in self._logged_hold_keys:
+                    self._logged_hold_keys.add(hold_key)
+                    self._log(
+                        f"Holding Switch item `{u_path.name}` while other downloads in "
+                        f"`{watch_root.name}/` finish..."
+                    )
+                continue
+            with self._lock:
+                if u_path in self._ready_buffer and u_path not in self._queued_or_active:
+                    self._ready_buffer.remove(u_path)
+                    self._ready_signatures.pop(u_path, None)
+                    self._queued_or_active.add(u_path)
+                    self._logged_hold_keys.discard(f"untagged_sw:{u_key}")
+                    self._log(f"Queued: {u_path.name}")
+                    self.job_queue.put(("single", (u_path,)))
+
         # Prune stale hold/poll tracking keys for items that were deleted or moved out of `watch_dir`
         for hk in list(self._logged_hold_keys):
             if hk.startswith("md_active:") and hk.removeprefix("md_active:") not in multidisc_buckets:
@@ -694,6 +761,8 @@ class PipelineWatcher:
             elif hk.startswith("active:") and hk.removeprefix("active:") not in switch_buckets:
                 self._logged_hold_keys.discard(hk)
             elif hk.startswith("orphan:") and hk.removeprefix("orphan:") not in switch_buckets:
+                self._logged_hold_keys.discard(hk)
+            elif hk.startswith("untagged_sw:") and hk.removeprefix("untagged_sw:") not in untagged_hold_keys:
                 self._logged_hold_keys.discard(hk)
         for fam_key in list(self._orphan_nas_check_state):
             if fam_key not in switch_buckets:
@@ -764,8 +833,23 @@ class PipelineWatcher:
                 ):
                     has_base = False
                 else:
+                    title_hints: list[str] = []
+                    for p_item, _ in pairs:
+                        raw_item_name = p_item.name if p_item.is_dir() else p_item.stem
+                        cleaned_hint = sanitize_rom_stem(raw_item_name)
+                        if cleaned_hint and cleaned_hint not in title_hints:
+                            title_hints.append(cleaned_hint)
                     try:
-                        donor, _ = find_nas_switch_family_files(switch_dir, fam_id, self.config)
+                        donor = None
+                        for hint in (title_hints or [None]):
+                            donor, _ = find_nas_switch_family_files(
+                                switch_dir,
+                                fam_id,
+                                self.config,
+                                game_title_hint=hint,
+                            )
+                            if donor is not None:
+                                break
                         has_base = donor is not None
                     except OSError:
                         has_base = False

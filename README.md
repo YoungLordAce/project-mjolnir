@@ -12,7 +12,13 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
 
 ## Quick Start (5-Minute Setup)
 
-1. **Install Python 3.11+ dependencies:**
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YoungLordAce/project-mjolnir.git
+   cd project-mjolnir
+   ```
+
+2. **Install Python 3.11+ dependencies:**
    ```bash
    python -m venv .venv
 
@@ -23,7 +29,7 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
    ./.venv/bin/pip install -r requirements.txt
    ```
 
-2. **Create your local `config.toml`:**
+3. **Create your local `config.toml`:**
    ```bash
    # Windows (PowerShell)
    Copy-Item config.example.toml config.toml
@@ -33,9 +39,9 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
    ```
    Open `config.toml` and set **`library_root`** under `[paths.windows]` or `[paths.linux]` to your destination ROM folder (local drive, mapped NAS drive, UNC share, or Linux `smb://` URI). Optionally change `watch_dir` if you want to watch a folder other than `./drop`.
 
-3. **Add the external tools you need** (see the table below — you only need tools for the consoles you actually collect).
+4. **Add the external tools you need** (see the table below — you only need tools for the consoles you actually collect).
 
-4. **Check your setup:**
+5. **Check your setup** *(automatically creates `./drop`, `./.staging`, `./processed`, and `./quarantine`)*:
    ```bash
    # Windows
    .\.venv\Scripts\python.exe main.py doctor
@@ -44,7 +50,7 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
    ./.venv/bin/python main.py doctor
    ```
 
-5. **Run the pipeline:**
+6. **Run the pipeline:**
    Drop files into `./drop` and start watching:
    ```bash
    # Windows
@@ -65,7 +71,7 @@ Mjolnir checks both your system `PATH` and the `./tools/` folder automatically. 
 | Tool | Needed For (ROMs / Formats) | Official Download | Where to Place It |
 | :--- | :--- | :--- | :--- |
 | **7-Zip** (`7z` / `7zz`) | Extracting & peeking `.7z`, `.rar`, `.zip` archives *(recommended for all systems)* | [7-zip.org](https://www.7-zip.org/download.html) / [ip7z/7zip Releases](https://github.com/ip7z/7zip/releases) | **Win:** `tools/7z/7z.exe` *(or standard `C:\Program Files\7-Zip\` install)*<br>**Linux:** `tools/7z/7zz` *(recommended for `.rar`)* or `PATH` |
-| **chdman** | **PS1** (single-disc), **PS2**, **PSP**, **Saturn**, **Dreamcast**, **Sega CD**, **PC Engine CD** -> `.chd` | [MAME Releases](https://www.mamedev.org/release.html) *(extract `chdman.exe`)* | **Win:** `tools/chdman/chdman.exe`<br>**Linux:** install `mame-tools` on `PATH` |
+| **chdman** | **PS1** (single-disc), **PS2**, **PSP**, **Saturn**, **Dreamcast**, **Sega CD**, **PC Engine CD** -> `.chd` | [MAME GitHub Releases](https://github.com/mamedev/mame/releases) *(extract `chdman.exe` from the Windows release)* | **Win:** `tools/chdman/chdman.exe`<br>**Linux:** install `mame-tools` on `PATH` |
 | **PSXPackager** | **PS1 (multi-disc)** -> single `.pbp` with built-in disc switching | [RupertAvery/PSXPackager Releases](https://github.com/RupertAvery/PSXPackager/releases) | **Win:** `tools/psxpackager/psxpackager.exe` (+ `Resources/`)<br>**Linux:** `tools/psxpackager/psxpackager` *(needs `.NET 10` runtime)* |
 | **DolphinTool** | **GameCube** & **Wii** -> `.rvz` | [Dolphin Downloads](https://dolphin-emu.org/download/) *(included in release zip)* | **Win:** `tools/dolphin/DolphinTool.exe` *(or Dolphin on `PATH`)*<br>**Linux:** install `dolphin-emu-tool` on `PATH` |
 | **NSC_Builder** (`squirrel`) / **nsz** | **Nintendo Switch** -> merged `.xci` (Base + Update + DLC) & `.nsz`/`.xcz` decompression | [julesontheroad/NSC_BUILDER](https://github.com/julesontheroad/NSC_BUILDER) / [nicoboss/nsz](https://github.com/nicoboss/nsz) | **Win:** `tools/nscb/ztools/squirrel.exe`<br>**Linux:** `tools/nscb/ztools/squirrel.py` or `pip install nsz` |

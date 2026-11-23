@@ -419,6 +419,63 @@ class Phase4Tests(unittest.TestCase):
                 tail = run_psxpackager(noisy_cmd, work_dir=work_dir, status_label="test-stderr")
                 self.assertTrue(any("WARN_LINE" in line for line in tail))
 
+    def test_watcher_pairs_untagged_nointro_switch_base_and_wakes_orphan_for_untagged_nas_donor(
+        self,
+    ) -> None:
+        def _make_pfs0_with_tik(tid_hex: str) -> bytes:
+            tik_name = f"{tid_hex.lower()}0000000000000000.tik\x00".encode("ascii")
+            header = bytearray(16 + 24 + len(tik_name))
+            header[0:4] = b"PFS0"
+            header[4:8] = (1).to_bytes(4, "little")
+            header[8:12] = len(tik_name).to_bytes(4, "little")
+            header[40 : 40 + len(tik_name)] = tik_name
+            return bytes(header) + (b"\x00" * 64)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = self._make_fast_test_config(Path(tmp))
+            drop = cfg.paths.watch_dir
+            nas_switch = cfg.paths.library_root / "switch"
+            nas_switch.mkdir(parents=True, exist_ok=True)
+
+            # Case 1: Untagged No-Intro Base archive + TitleID-bearing Update arrive together in drop/
+            base_zip = drop / "Huntdown (Europe) (En,Ja,Fr,De,Es,It,Zh-Hans).zip"
+            with zipfile.ZipFile(base_zip, "w") as zf:
+                zf.writestr("Huntdown (Europe) (En,Ja,Fr,De,Es,It,Zh-Hans).xci", b"HEAD" * 64)
+
+            upd_nsp = (
+                drop
+                / "Huntdown (World) (En,Ja,Fr,De,Es,It,Zh-Hans) (v524288) (v1.0.8) (Update).nsp"
+            )
+            upd_nsp.write_bytes(_make_pfs0_with_tik("0100EBA004726800"))
+
+            watcher1 = PipelineWatcher(cfg)
+            watcher1._ready_buffer.extend([base_zip.resolve(), upd_nsp.resolve()])
+            watcher1._ready_signatures[base_zip.resolve()] = (1, base_zip.stat().st_size)
+            watcher1._ready_signatures[upd_nsp.resolve()] = (1, upd_nsp.stat().st_size)
+            watcher1._flush_ready_buffer(drop.resolve())
+
+            self.assertEqual(watcher1.job_queue.qsize(), 1)
+            kind, batch = watcher1.job_queue.get_nowait()
+            self.assertEqual(kind, "switch")
+            self.assertEqual(batch, (base_zip.resolve(), upd_nsp.resolve()))
+            self.assertEqual(watcher1._ready_buffer, [])
+
+            # Case 2: Untagged No-Intro Base `.xci` already on NAS -> held Update wakes immediately!
+            base_zip.unlink()
+            nas_xci = nas_switch / "Huntdown (Europe) (En,Ja,Fr,De,Es,It,Zh-Hans).xci"
+            nas_xci.write_bytes(b"HEAD" * 128)
+
+            watcher2 = PipelineWatcher(cfg)
+            watcher2._ready_buffer.append(upd_nsp.resolve())
+            watcher2._ready_signatures[upd_nsp.resolve()] = (1, upd_nsp.stat().st_size)
+            watcher2._flush_ready_buffer(drop.resolve())
+
+            self.assertEqual(watcher2.job_queue.qsize(), 1)
+            kind2, batch2 = watcher2.job_queue.get_nowait()
+            self.assertEqual(kind2, "single")
+            self.assertEqual(batch2, (upd_nsp.resolve(),))
+            self.assertEqual(watcher2._ready_buffer, [])
+
 
 if __name__ == "__main__":
     unittest.main()
