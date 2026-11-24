@@ -28,7 +28,7 @@ _BRACKET_TID_RE = re.compile(r"\[\s*(01[0-9A-Fa-f]{14})\s*\]")
 _ANY_TID_RE = re.compile(r"(?<![0-9A-Fa-f])(01[0-9A-Fa-f]{14})(?![0-9A-Fa-f])")
 _TIK_FILENAME_RE = re.compile(r"^(01[0-9A-Fa-f]{14})[0-9A-Fa-f]{16}\.tik$", re.IGNORECASE)
 _PFS0_XML_TID_RE = re.compile(rb"(?i)<Id>\s*(?:0x)?(01[0-9A-Fa-f]{14})\s*</Id>")
-_VERSION_TAG_RE = re.compile(r"\[\s*v(\d+)\s*\]", re.IGNORECASE)
+_VERSION_TAG_RE = re.compile(r"[\[\(]\s*v(\d+)\s*[\]\)]", re.IGNORECASE)
 
 # NSC_Builder content summary tag, e.g. `(1G+1U+5D)`, `(5D)`, `(1U+2D)`
 _NSCB_CONTENT_TAG_RE = re.compile(
@@ -241,9 +241,68 @@ def extract_switch_title_ids_from_file(file_path: Path) -> tuple[str, ...]:
 
 
 def parse_switch_version(name: str) -> int:
-    """Extract numeric `[v1966080]` version tag from filename (0 if absent)."""
+    """Extract numeric `[v1966080]` or `(v524288)` version tag from filename (0 if absent)."""
     m = _VERSION_TAG_RE.search(name)
     return int(m.group(1)) if m else 0
+
+
+def extract_switch_version_from_source(path: Path, config: PipelineConfig) -> int:
+    """
+    Extract the highest numeric Switch version tag (`[v...]` / `(v...)`) from a Switch package,
+    archive (peeking its entry list via cache), or directory. Returns 0 if no version tag is found.
+    """
+    direct = parse_switch_version(path.name)
+    if direct > 0:
+        return direct
+
+    if path.is_file() and is_archive(path):
+        try:
+            entries = list_archive_entries(path, config.binaries.seven_zip)
+        except ArchiveError:
+            return 0
+        versions = [
+            parse_switch_version(e.filename)
+            for e in entries
+            if not e.is_dir and e.suffix in SWITCH_PACKAGE_EXTENSIONS
+        ]
+        return max(versions, default=0)
+
+    if path.is_dir():
+        try:
+            versions = [
+                parse_switch_version(p.name)
+                for p in path.rglob("*")
+                if p.is_file() and p.suffix.lower() in SWITCH_PACKAGE_EXTENSIONS
+            ]
+        except OSError:
+            return 0
+        return max(versions, default=0)
+
+    return 0
+
+
+def is_redundant_switch_update(
+    incoming_paths: list[Path],
+    nas_donor: Path,
+    config: PipelineConfig,
+) -> tuple[bool, int, int]:
+    """
+    Return `(is_redundant, max_incoming_ver, nas_ver)` for an Update-only Switch batch.
+
+    Conservative by design: only returns `True` when BOTH `nas_donor` carries a positive numeric
+    version (`> 0`) AND every incoming update carries a positive numeric version with
+    `max(incoming_versions) <= nas_ver`.
+    """
+    nas_ver = parse_switch_version(nas_donor.name)
+    if nas_ver <= 0 or not incoming_paths:
+        return False, 0, nas_ver
+
+    incoming_vers = [extract_switch_version_from_source(p, config) for p in incoming_paths]
+    if not incoming_vers or any(v <= 0 for v in incoming_vers):
+        return False, max(incoming_vers, default=0), nas_ver
+
+    max_inc = max(incoming_vers)
+    return (max_inc <= nas_ver), max_inc, nas_ver
 
 
 def switch_package_sort_key(file_path: Path) -> tuple[int, int, int, str]:

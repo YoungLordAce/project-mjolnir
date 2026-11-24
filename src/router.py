@@ -57,6 +57,7 @@ from src.switch_bundler import (
     find_nas_switch_family_files,
     group_candidates_with_switch_families,
     has_explicit_addon_only_tag,
+    is_redundant_switch_update,
     probe_switch_source,
     switch_package_sort_key,
 )
@@ -865,14 +866,26 @@ def _finalize_sources(
     has_routed: bool,
     has_quarantined: bool,
     deferred_notes: list[str] | None = None,
+    skipped_notes: list[str] | None = None,
 ) -> str:
     """Finalize one or more source paths (`move` to `processed/` or `delete`) after routing."""
     if dry_run:
+        if skipped_notes and not has_routed and not has_quarantined:
+            return f"dry-run ({'; '.join(skipped_notes)})"
         return "dry-run (source untouched)"
     if keep_source:
+        if skipped_notes and not has_routed and not has_quarantined:
+            return f"{'; '.join(skipped_notes)}; kept source (--keep-source)"
         return "kept source (--keep-source)"
     if deferred_notes and not has_routed and not has_quarantined:
         return "; ".join(deferred_notes)
+    if skipped_notes and not has_routed and not has_quarantined:
+        notes = [
+            _finalize_source_item(s, config, had_quarantine=False)
+            for s in sources
+        ]
+        cleanup = notes[0] if len(notes) == 1 else f"finalized {len(sources)} sources ({notes[0]}; ...)"
+        return f"{'; '.join(skipped_notes)}; {cleanup}"
     if has_routed or has_quarantined:
         notes = [
             _finalize_source_item(s, config, had_quarantine=has_quarantined)
@@ -893,6 +906,7 @@ def _build_routing_outcome(
     dry_run: bool,
     keep_source: bool,
     deferred_notes: list[str] | None = None,
+    skipped_notes: list[str] | None = None,
 ) -> RoutingOutcome:
     """Deduplicate output lists, finalize source(s), and build a `RoutingOutcome`."""
     unique_m3u = tuple(dict.fromkeys(m3u_files))
@@ -905,6 +919,7 @@ def _build_routing_outcome(
         has_routed=bool(routed_files),
         has_quarantined=bool(quarantined_files),
         deferred_notes=deferred_notes,
+        skipped_notes=skipped_notes,
     )
     return RoutingOutcome(
         source_path=sources[0],
@@ -982,6 +997,27 @@ def ingest_switch_bundle(
                 dry_run=dry_run,
             )
 
+        # Fast duplicate/older update guard: avoid copying a multi-GB NAS donor and re-packing
+        # when an Update-only drop carries a version <= what is already merged in `nas_donor`.
+        if combined_roles == {SwitchContentRole.UPDATE}:
+            redundant, inc_ver, nas_ver = is_redundant_switch_update(srcs, nas_donor, config)
+            if redundant:
+                skip_msg = (
+                    f"skipped duplicate/older Switch update "
+                    f"(v{inc_ver} <= NAS v{nas_ver} in `{nas_donor.name}`)"
+                )
+                return _build_routing_outcome(
+                    srcs,
+                    config,
+                    routed_files=[],
+                    m3u_files=[],
+                    quarantined_files=[],
+                    superseded_files=[],
+                    dry_run=dry_run,
+                    keep_source=keep_source,
+                    skipped_notes=[skip_msg],
+                )
+
     # Dry-run simulation without extracting multi-GB Switch archives or copying NAS donors
     if dry_run:
         total_pkgs = sum(i.package_count for i in probed_infos if i is not None)
@@ -1034,6 +1070,7 @@ def ingest_switch_bundle(
     quarantined_files: list[Path] = []
     superseded_files: list[Path] = []
     deferred_notes: list[str] = []
+    skipped_notes: list[str] = []
 
     with StagingJobDir(config, create=True) as job_dir:
         # 1. Inspect all archives in the bundle upfront and verify combined staging space
@@ -1147,6 +1184,25 @@ def ingest_switch_bundle(
                     )
                     continue
 
+                # Post-extraction duplicate/older update guard (catches updates extracted from
+                # archives whose outer filename lacked a `[v...]` tag).
+                pkg_roles: set[SwitchContentRole] = set()
+                for pkg in pkg_list:
+                    pkg_tids = extract_switch_title_ids_from_file(pkg)
+                    for t in pkg_tids:
+                        _, r_pkg = classify_switch_title_id(t)
+                        pkg_roles.add(r_pkg)
+                if pkg_roles == {SwitchContentRole.UPDATE}:
+                    redundant, inc_ver, nas_ver = is_redundant_switch_update(
+                        pkg_list, nas_donor, config
+                    )
+                    if redundant:
+                        skipped_notes.append(
+                            f"skipped duplicate/older Switch update [{fam_id}] "
+                            f"(v{inc_ver} <= NAS v{nas_ver} in `{nas_donor.name}`)"
+                        )
+                        continue
+
                 # Copy NAS Base/Merged donor into local staging so squirrel merges at NVMe speed
                 donor_dir = job_dir / f"nas_donor_{fam_id}"
                 donor_dir.mkdir(parents=True, exist_ok=True)
@@ -1244,6 +1300,7 @@ def ingest_switch_bundle(
         dry_run=False,
         keep_source=keep_source,
         deferred_notes=deferred_notes,
+        skipped_notes=skipped_notes,
     )
 
 

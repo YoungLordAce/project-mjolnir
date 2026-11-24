@@ -482,7 +482,7 @@ def run_inspect(targets: list[Path], config: PipelineConfig) -> int:
 # Phase 3: Single-Item Conversion & Atomic NAS Routing (`process`)
 # ------------------------------------------------------------------------------
 def _render_routing_outcome(outcome: RoutingOutcome) -> None:
-    is_deferred = outcome.post_action_taken.startswith("deferred")
+    is_deferred = outcome.post_action_taken.startswith(("deferred", "skipped"))
     if _has_module("rich"):
         from rich.console import Console
         from rich.panel import Panel

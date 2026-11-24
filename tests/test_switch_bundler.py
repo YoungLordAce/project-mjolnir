@@ -12,6 +12,7 @@ import zipfile
 from src.config_loader import load_config
 from src.identifier import identify_directory
 from src.models import ConversionArtifact, PostProcessAction
+from src.router import ingest_switch_bundle
 from src.switch_bundler import (
     SwitchContentRole,
     classify_switch_title_id,
@@ -467,6 +468,93 @@ class SwitchBundlerTests(unittest.TestCase):
                 id_item.companion_files[1].name,
                 "Sea of Stars - Throes of the Watchmaker (World) (v524288) (DLC).nsp",
             )
+
+    def test_duplicate_or_older_switch_update_skips_merge_while_newer_and_dlc_merge(self) -> None:
+        """
+        Verify Update-only drops with version <= NAS donor skip copying/merging and clean up,
+        while Update+DLC bundles and strictly newer updates still merge normally.
+        """
+        with tempfile.TemporaryDirectory() as tmp_root:
+            cfg = self._make_isolated_config(Path(tmp_root))
+            drop = cfg.paths.watch_dir
+            nas_switch = cfg.paths.library_root / "switch"
+            nas_switch.mkdir(parents=True, exist_ok=True)
+
+            nas_xci = nas_switch / "Sea of Stars [01008C0016544000] [v786432] (1G+1U+1D).xci"
+            nas_xci.write_bytes(b"NAS_MERGED_V786432" * 256)
+
+            # 1. Exact duplicate update (`[v786432]`) -> skip merge & move source to processed/
+            dup_upd = drop / "Sea of Stars [01008C0016544800][v786432].nsp"
+            dup_upd.write_bytes(_build_minimal_pfs0_with_tik("01008C00165448000000000000000000"))
+
+            with patch("src.router.convert_identified_item") as mock_conv:
+                out_dup = ingest_switch_bundle([dup_upd], cfg, dry_run=False)
+                self.assertEqual(mock_conv.call_count, 0)
+
+            self.assertEqual(out_dup.routed_files, ())
+            self.assertIn("skipped duplicate/older Switch update", out_dup.post_action_taken)
+            self.assertIn("v786432 <= NAS v786432", out_dup.post_action_taken)
+            self.assertFalse(dup_upd.exists())
+            self.assertTrue((cfg.paths.processed_dir / dup_upd.name).is_file())
+            self.assertTrue(nas_xci.is_file())
+
+            # 2. Older update with parenthesized `(v524288)` -> skip merge too
+            old_upd = drop / "Sea of Stars (World) (v524288) (v1.0.8) (Update).nsp"
+            old_upd.write_bytes(_build_minimal_pfs0_with_tik("01008C00165448000000000000000000"))
+
+            with patch("src.router.convert_identified_item") as mock_conv:
+                out_old = ingest_switch_bundle([old_upd], cfg, dry_run=False)
+                self.assertEqual(mock_conv.call_count, 0)
+
+            self.assertIn("v524288 <= NAS v786432", out_old.post_action_taken)
+            self.assertFalse(old_upd.exists())
+
+            # 3. Same-version update bundled with a NEW DLC -> must NOT skip!
+            same_upd = drop / "Sea of Stars [01008C0016544800][v786432].nsp"
+            same_upd.write_bytes(_build_minimal_pfs0_with_tik("01008C00165448000000000000000000"))
+            new_dlc = drop / "Sea of Stars [01008C0016545002][v0].nsp"
+            new_dlc.write_bytes(_build_minimal_pfs0_with_tik("01008C00165450020000000000000000"))
+
+            def _fake_merge_dlc(item, job_dir: Path, _config):
+                out_xci = job_dir / "Sea of Stars [01008C0016544000] [v786432] (1G+1U+2D).xci"
+                out_xci.write_bytes(b"MERGED_WITH_2D" * 256)
+                return ConversionArtifact(
+                    system_id="switch",
+                    output_files=(out_xci,),
+                    converted=True,
+                    tool_used="squirrel",
+                )
+
+            with patch("src.router.convert_identified_item", side_effect=_fake_merge_dlc) as mock_conv:
+                out_dlc = ingest_switch_bundle([same_upd, new_dlc], cfg, dry_run=False)
+                self.assertEqual(mock_conv.call_count, 1)
+            self.assertEqual(len(out_dlc.routed_files), 1)
+            nas_2d = nas_switch / "Sea of Stars [01008C0016544000] [v786432] (1G+1U+2D).xci"
+            self.assertTrue(nas_2d.is_file())
+            self.assertFalse(nas_xci.exists())
+
+            # 4. Strictly newer update (`[v983040]`) -> must merge and replace `[v786432]`!
+            new_upd = drop / "Sea of Stars [01008C0016544800][v983040](axekin.com).nsp"
+            new_upd.write_bytes(_build_minimal_pfs0_with_tik("01008C00165448000000000000000000"))
+
+            def _fake_merge_new(item, job_dir: Path, _config):
+                out_xci = job_dir / "Sea of Stars [01008C0016544000] [v983040] (1G+1U+2D).xci"
+                out_xci.write_bytes(b"MERGED_V983040" * 256)
+                return ConversionArtifact(
+                    system_id="switch",
+                    output_files=(out_xci,),
+                    converted=True,
+                    tool_used="squirrel",
+                )
+
+            with patch("src.router.convert_identified_item", side_effect=_fake_merge_new) as mock_conv:
+                out_new = ingest_switch_bundle([new_upd], cfg, dry_run=False)
+                self.assertEqual(mock_conv.call_count, 1)
+            self.assertEqual(len(out_new.routed_files), 1)
+            self.assertTrue(
+                (nas_switch / "Sea of Stars [01008C0016544000] [v983040] (1G+1U+2D).xci").is_file()
+            )
+            self.assertFalse(nas_2d.exists())
 
 
 if __name__ == "__main__":
