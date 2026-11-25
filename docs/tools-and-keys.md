@@ -1,9 +1,9 @@
 # External Tools & Console Keys
 
-Project Mjolnir automatically resolves CLI tools from both your system `PATH` and the local `./tools/` directory. You only need to install the tools for the consoles you actually ingest.
+Völundr automatically resolves CLI tools from both your system `PATH` and the local `./tools/` directory. You only need to install the tools for the consoles you actually ingest.
 
 !!! tip "Automatic Download"
-    Running `python setup_mjolnir.py` can download and place these official upstream tools into `./tools/` automatically (skipping anything you already have installed).
+    Running `python setup_volundr.py` can download and place these official upstream tools into `./tools/` automatically (skipping anything you already have installed).
 
 ---
 
@@ -30,7 +30,7 @@ Everything inside `tools/` (except `tools/README.md`) is ignored by `.gitignore`
 
 | System | Files | Where to Place Them | What It Enables |
 | :--- | :--- | :--- | :--- |
-| **Nintendo Switch** | `prod.keys` *(or `keys.txt`)* | `tools/nscb/ztools/` *(or `tools/nscb/`, `tools/switch/`, or `~/.switch/prod.keys`)* | Required by `squirrel` for Switch `.xci` merging & `.nsz` decompression. Mjolnir automatically copies `prod.keys` → `keys.txt` and refreshes it whenever `prod.keys` is updated. |
+| **Nintendo Switch** | `prod.keys` *(or `keys.txt`)* | `tools/nscb/ztools/` *(or `tools/nscb/`, `tools/switch/`, or `~/.switch/prod.keys`)* | Required by `squirrel` for Switch `.xci` merging & `.nsz` decompression. Völundr automatically copies `prod.keys` → `keys.txt` and refreshes it whenever `prod.keys` is updated. |
 | **Nintendo 3DS** | `aes_keys.txt` or `boot9.bin` | `tools/3ds/` *(also checks Azahar/Citra `sysdata/` folders)* | Auto-decrypts encrypted `.3ds` cartridge dumps to `.cci` for Azahar *(ZeroKey dumps decrypt automatically without external key files)*. |
 | **PlayStation Vita** | `PSV_GAMES.tsv`, `PSV_DLCS.tsv`, `PSV_UPDATES.tsv` | `tools/psvita/` | Optional automatic `zRIF` lookup, `work.bin` license injection into Vita3K `.zip` archives, and official game title normalization. |
 
@@ -67,4 +67,4 @@ tools/
     └── PSV_UPDATES.tsv
 ```
 
-Run `python main.py doctor` after placing tools to confirm Mjolnir detects everything cleanly.
+Run `python main.py doctor` after placing tools to confirm Völundr detects everything cleanly.

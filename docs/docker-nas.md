@@ -1,6 +1,6 @@
 # Docker, NAS, Syncthing & ROMarr
 
-Project Mjolnir is designed to run 24/7 headless in Docker directly on a NAS or home server via `Dockerfile` and `config.docker.example.toml` (leaving `config.toml` untouched for desktop machines).
+Völundr is designed to run 24/7 headless in Docker directly on a NAS or home server via `Dockerfile` and `config.docker.example.toml` (leaving `config.toml` untouched for desktop machines).
 
 ---
 
@@ -31,17 +31,17 @@ Copy `config.docker.example.toml` to `config.docker.toml` (optional — the imag
 ### Example Stack Commands
 ```bash
 cp config.docker.example.toml config.docker.toml
-cd /path/to/stacks/mjolnir
+cd /path/to/stacks/volundr
 docker compose up -d --build
-docker exec mjolnir /app/.venv/bin/python /app/main.py --config /app/config.docker.toml doctor
-docker logs -f mjolnir
+docker exec volundr /app/.venv/bin/python /app/main.py --config /app/config.docker.toml doctor
+docker logs -f volundr
 ```
 
 ---
 
 ## Syncthing & Samba-Safe Atomic Transfers
 
-Project Mjolnir is built to coexist safely with Syncthing and Samba (SMB) shares syncing directly to handhelds (such as an AYN Thor running Cocoon FE):
+Völundr is built to coexist safely with Syncthing and Samba (SMB) shares syncing directly to handhelds (such as an AYN Thor running Cocoon FE):
 
 1. All extractions and conversions happen locally inside lock-protected `.staging/job_<id>/` directories.
 2. Finished files stream to `~syncthing~<filename>.tmp` at the destination (ignored by Syncthing so partial transfers are never synced, and avoiding leading-dot filenames that trigger Windows/Samba `Hidden` attributes).
@@ -52,7 +52,7 @@ Project Mjolnir is built to coexist safely with Syncthing and Samba (SMB) shares
 
 ## ROMarr Two-Library Integration
 
-Project Mjolnir watches both top-level drops and 1-level platform bucket subdirectories (`drop/<platform>/<file>`) created by ROMarr's `Folder` library:
+Völundr watches both top-level drops and 1-level platform bucket subdirectories (`drop/<platform>/<file>`) created by ROMarr's `Folder` library:
 
-1. Set ROMarr's default intake library to your Mjolnir `drop/` path (e.g., `/path/to/mjolnir/drop`).
-2. Add your destination ROM library (`/path/to/library/roms`) as a second catalog library so ROMarr continues tracking converted `.chd`/`.rvz`/`.pbp`/`.xci`/`.cci`/`.wua`/`.zip` files after Mjolnir processes `drop/`.
+1. Set ROMarr's default intake library to your Völundr `drop/` path (e.g., `/path/to/volundr/drop`).
+2. Add your destination ROM library (`/path/to/library/roms`) as a second catalog library so ROMarr continues tracking converted `.chd`/`.rvz`/`.pbp`/`.xci`/`.cci`/`.wua`/`.zip` files after Völundr processes `drop/`.

@@ -1,8 +1,8 @@
-# Project Mjolnir — Documentation
+# Völundr — Documentation
 
-The full technical documentation for Project Mjolnir is now organized under [`docs/`](docs/) and published online via Zensical & GitHub Pages:
+The full technical documentation for Völundr is now organized under [`docs/`](docs/) and published online via Zensical & GitHub Pages:
 
-👉 **[younglordace.github.io/project-mjolnir](https://younglordace.github.io/project-mjolnir/)**
+👉 **[younglordace.github.io/volundr](https://younglordace.github.io/volundr/)**
 
 ## Quick Links
 - **[Overview](docs/index.md)**

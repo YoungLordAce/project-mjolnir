@@ -1104,12 +1104,12 @@ class PipelineWatcher:
 
         self._poller_thread = threading.Thread(
             target=self._stability_poll_loop,
-            name="mjolnir-stability-poller",
+            name="volundr-stability-poller",
             daemon=True,
         )
         self._worker_thread = threading.Thread(
             target=self._worker_loop,
-            name="mjolnir-sequential-worker",
+            name="volundr-sequential-worker",
             daemon=False,
         )
         self._poller_thread.start()

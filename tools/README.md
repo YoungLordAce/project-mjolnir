@@ -37,4 +37,4 @@ tools/
     └── PSV_UPDATES.tsv
 ```
 
-Run `python main.py doctor` after placing tools to confirm Mjolnir detects them cleanly.
+Run `python main.py doctor` after placing tools to confirm Völundr detects them cleanly.

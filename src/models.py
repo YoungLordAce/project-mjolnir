@@ -203,7 +203,7 @@ class PathSettings:
 
 @dataclass(frozen=True, slots=True)
 class PipelineConfig:
-    """Validated root configuration object for Project Mjolnir."""
+    """Validated root configuration object for Völundr."""
 
     config_path: Path
     platform_key: str  # "windows" or "linux"

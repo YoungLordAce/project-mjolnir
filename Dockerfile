@@ -108,7 +108,7 @@ WORKDIR /app
 
 COPY requirements.txt /app/requirements.txt
 
-# Install Project Mjolnir deps + NSC_Builder (squirrel.py) Linux dependencies + nsz
+# Install Völundr deps + NSC_Builder (squirrel.py) Linux dependencies + nsz
 RUN python3.11 -m venv /app/.venv \
     && /app/.venv/bin/pip install --no-cache-dir --upgrade pip \
     && /app/.venv/bin/pip install --no-cache-dir -r /app/requirements.txt \

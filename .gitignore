@@ -17,7 +17,7 @@ tools/*
 **/title.keys
 **/PSV_*.tsv
 
-# Pipeline runtime directories (auto-created by Project Mjolnir on startup)
+# Pipeline runtime directories (auto-created by Völundr on startup)
 drop/
 processed/
 quarantine/

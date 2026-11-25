@@ -1,15 +1,15 @@
-# Project Mjolnir
+# Völundr
 
-[![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://younglordace.github.io/project-mjolnir/)
+[![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://younglordace.github.io/volundr/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 **Drop ROM archives in -> get clean, compressed, emulator-ready games sorted into your library automatically.**
 
-Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipeline for **Windows**, **Linux**, and **Docker**. Drop `.zip`, `.7z`, `.rar`, raw disc images, or folders into `./drop` and Mjolnir identifies the console, converts to the optimal format (`.chd`, `.pbp`, `.rvz`, `.xci`, `.cci`, `.wua`, Vita3K `.zip`), and moves everything safely into your local folder or NAS.
+Völundr is a cross-platform Python 3.11+ automated ROM ingestion pipeline for **Windows**, **Linux**, and **Docker**. Drop `.zip`, `.7z`, `.rar`, raw disc images, or folders into `./drop` and Völundr identifies the console, converts to the optimal format (`.chd`, `.pbp`, `.rvz`, `.xci`, `.cci`, `.wua`, Vita3K `.zip`), and moves everything safely into your local folder or NAS.
 
-**Full Documentation:** [younglordace.github.io/project-mjolnir](https://younglordace.github.io/project-mjolnir/)
+**Full Documentation:** [younglordace.github.io/volundr](https://younglordace.github.io/volundr/)
 
-![Project Mjolnir Watch Mode](docs/assets/watch.svg)
+![Völundr Watch Mode](docs/assets/watch.svg)
 
 ---
 
@@ -17,16 +17,16 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/YoungLordAce/project-mjolnir.git
-   cd project-mjolnir
+   git clone https://github.com/YoungLordAce/volundr.git
+   cd volundr
    ```
 
 2. **Run the guided setup script** *(requires Python 3.11+)*:
    ```bash
-   python setup_mjolnir.py
+   python setup_volundr.py
    ```
    It walks you through creating `.venv`, generating `config.toml` with your ROM library folder, downloading official third-party tools into `./tools/` (you can pick **All** or **Choose by console**), auto-creating `./drop`, `./processed`, `./quarantine`, and `./.staging`, and running `main.py doctor` to verify everything.
-   *(Want to preview first without downloading anything? Run `python setup_mjolnir.py --dry-run`.)*
+   *(Want to preview first without downloading anything? Run `python setup_volundr.py --dry-run`.)*
 
 3. **Drop ROMs into `./drop` and start watching:**
    ```bash
@@ -74,13 +74,21 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
 
 </details>
 
-> **Running on a NAS / Docker?** The included [`Dockerfile`](Dockerfile) pre-installs almost every tool automatically. See the **[Docker & NAS Guide](https://younglordace.github.io/project-mjolnir/docker-nas/)** for details.
+> **Running on a NAS / Docker?** The included [`Dockerfile`](Dockerfile) pre-installs almost every tool automatically. See the **[Docker & NAS Guide](https://younglordace.github.io/volundr/docker-nas/)** for details.
+
+### Updating
+Because your `config.toml`, `.venv`, downloaded tools, and keys are gitignored, you never need to re-clone. Simply run inside your `volundr` folder:
+```bash
+git pull
+# Optional: refresh Python dependencies or check for new tools
+python setup_volundr.py --skip-tools
+```
 
 ---
 
 ## External Tools
 
-Mjolnir checks both your system `PATH` and the `./tools/` folder automatically. Only download the tools for the systems you plan to ingest:
+Völundr checks both your system `PATH` and the `./tools/` folder automatically. Only download the tools for the systems you plan to ingest:
 
 | Tool | Needed For (ROMs / Formats) | Official Download | Where to Place It |
 | :--- | :--- | :--- | :--- |
@@ -101,7 +109,7 @@ Supply your own files dumped from hardware you own (everything inside `tools/` i
 
 | System | Files | Where to Place Them | What It Enables |
 | :--- | :--- | :--- | :--- |
-| **Nintendo Switch** | `prod.keys` *(or `keys.txt`)* | `tools/nscb/ztools/` *(or `~/.switch/prod.keys`)* | Required by `squirrel` for Switch `.xci` merging & `.nsz` decompression *(Mjolnir auto-copies `prod.keys` → `keys.txt`)* |
+| **Nintendo Switch** | `prod.keys` *(or `keys.txt`)* | `tools/nscb/ztools/` *(or `~/.switch/prod.keys`)* | Required by `squirrel` for Switch `.xci` merging & `.nsz` decompression *(Völundr auto-copies `prod.keys` → `keys.txt`)* |
 | **Nintendo 3DS** | `aes_keys.txt` or `boot9.bin` | `tools/3ds/` | Auto-decrypts encrypted `.3ds` dumps to `.cci` for Azahar *(ZeroKey dumps work without keys)* |
 | **PS Vita** | `PSV_GAMES.tsv`, `PSV_DLCS.tsv`, `PSV_UPDATES.tsv` | `tools/psvita/` | Automatic `zRIF`/`work.bin` license generation and title normalization for `.pkg` files |
 
@@ -121,10 +129,10 @@ Supply your own files dumped from hardware you own (everything inside `tools/` i
 
 ## Detailed Documentation
 
-Browse the full documentation site at **[younglordace.github.io/project-mjolnir](https://younglordace.github.io/project-mjolnir/)** (source in [`docs/`](docs/)) for:
-- **[Supported Consoles](https://younglordace.github.io/project-mjolnir/consoles/):** Per-console conversion rules, multi-disc `.pbp` vs `_discs/` + `.m3u`, CUE healing, Switch donor caching & duplicate update skip, 3DS/Wii U/PS Vita behavior
-- **[Docker & NAS](https://younglordace.github.io/project-mjolnir/docker-nas/):** 24/7 headless Docker deployment, Syncthing atomic transfers, and ROMarr two-library integration
-- **[Configuration](https://younglordace.github.io/project-mjolnir/configuration/) & [Architecture](https://younglordace.github.io/project-mjolnir/architecture/):** Full `config.toml` reference, `src/` module map, and running tests
+Browse the full documentation site at **[younglordace.github.io/volundr](https://younglordace.github.io/volundr/)** (source in [`docs/`](docs/)) for:
+- **[Supported Consoles](https://younglordace.github.io/volundr/consoles/):** Per-console conversion rules, multi-disc `.pbp` vs `_discs/` + `.m3u`, CUE healing, Switch donor caching & duplicate update skip, 3DS/Wii U/PS Vita behavior
+- **[Docker & NAS](https://younglordace.github.io/volundr/docker-nas/):** 24/7 headless Docker deployment, Syncthing atomic transfers, and ROMarr two-library integration
+- **[Configuration](https://younglordace.github.io/volundr/configuration/) & [Architecture](https://younglordace.github.io/volundr/architecture/):** Full `config.toml` reference, `src/` module map, and running tests
 
 ---
 
@@ -132,7 +140,7 @@ Browse the full documentation site at **[younglordace.github.io/project-mjolnir]
 
 > **Project Status:** This is a personal homelab project shared as-is under the [MIT License](LICENSE). Pull requests and bug reports are welcome; support is best-effort.
 >
-> **Disclaimer:** Project Mjolnir includes **no** copyrighted ROMs, BIOS files, console decryption keys, license databases, or third-party executables. You must supply your own legal dumps, keys dumped from hardware you own, and third-party CLI tools.
+> **Disclaimer:** Völundr includes **no** copyrighted ROMs, BIOS files, console decryption keys, license databases, or third-party executables. You must supply your own legal dumps, keys dumped from hardware you own, and third-party CLI tools.
 
 ## License
 

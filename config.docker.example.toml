@@ -1,5 +1,5 @@
 # ==============================================================================
-# Project Mjolnir — Docker Container Configuration Example
+# Völundr — Docker Container Configuration Example
 # ==============================================================================
 # QUICK START (Docker / Headless NAS Deployment):
 #   1. Copy this file to `config.docker.toml` (gitignored so local tweaks stay private).
@@ -11,7 +11,7 @@
 #        - `/app/quarantine` (unidentified or encrypted files needing attention)
 #        - `/app/tools`      (optional read-only mount for keys, `psxpackager`, `PSV_*.tsv`)
 #   3. Verify inside the container with:
-#        docker exec mjolnir /app/.venv/bin/python /app/main.py --config /app/config.docker.toml doctor
+#        docker exec volundr /app/.venv/bin/python /app/main.py --config /app/config.docker.toml doctor
 #
 # Kept separate from `config.toml` so desktop/workstation configs stay untouched.
 

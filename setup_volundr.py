@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Project Mjolnir — Optional Guided Setup & External Tool Installer.
+Völundr — Optional Guided Setup & External Tool Installer.
 
 Uses only the Python 3.11+ standard library so beginners can run it BEFORE
 creating a virtual environment or installing `requirements.txt`:
 
-    python setup_mjolnir.py
+    python setup_volundr.py
 
 What it can do (all steps are optional and non-destructive):
   1. Create `.venv` and install `requirements.txt`.
@@ -47,7 +47,7 @@ CONFIG_FILE = PROJECT_ROOT / "config.toml"
 REQUIREMENTS_FILE = PROJECT_ROOT / "requirements.txt"
 TOOLS_DIR = PROJECT_ROOT / "tools"
 
-USER_AGENT = "Project-Mjolnir-Setup/1.0 (+https://github.com/YoungLordAce/project-mjolnir)"
+USER_AGENT = "Volundr-Setup/1.0 (+https://github.com/YoungLordAce/volundr)"
 
 TOOL_GROUPS: tuple[tuple[str, str, str], ...] = (
     ("7z", "7-Zip (7z/7zz)", "Extracting .7z / .rar / .zip archives (recommended for all systems)"),
@@ -169,7 +169,7 @@ def setup_config_file(
 
     if not chosen_root and interactive:
         sample = r"D:\Emulation\roms" if platform_key == "windows" else "/mnt/nas/games/library/roms"
-        print("\n  Where should Project Mjolnir save your organized ROM library?")
+        print("\n  Where should Völundr save your organized ROM library?")
         print(f"  (Example: {sample} — press Enter to keep the placeholder and edit later)")
         chosen_root = input("  library_root: ").strip().strip('"').strip("'")
 
@@ -932,8 +932,8 @@ def _ensure_key_placeholder_dirs(project_root: Path, dry_run: bool) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="setup_mjolnir.py",
-        description="Guided first-time setup & official external tool installer for Project Mjolnir.",
+        prog="setup_volundr.py",
+        description="Guided first-time setup & official external tool installer for Völundr.",
     )
     parser.add_argument(
         "-y",
@@ -968,9 +968,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     if sys.version_info < (3, 11):
         print(
-            f"[ERROR] Project Mjolnir requires Python 3.11+ (detected {sys.version.split()[0]}).",
+            f"[ERROR] Völundr requires Python 3.11+ (detected {sys.version.split()[0]}).",
             file=sys.stderr,
         )
         return 1
@@ -981,7 +986,7 @@ def main(argv: list[str] | None = None) -> int:
     interactive = not args.yes and sys.stdin.isatty()
 
     print("=" * 72)
-    print(f"Project Mjolnir — Guided Setup ({plat}/{arch})")
+    print(f"Völundr — Guided Setup ({plat}/{arch})")
     if args.dry_run:
         print("MODE: DRY-RUN (no files will be created or downloaded)")
     print("=" * 72)
@@ -1051,7 +1056,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # 4. Reminder for user-supplied keys + `main.py doctor`
     print("\n[Step 4/4] Verification & User-Supplied Keys Reminder")
-    print("  Project Mjolnir NEVER downloads copyrighted console keys or license DBs.")
+    print("  Völundr NEVER downloads copyrighted console keys or license DBs.")
     print("  If you ingest these consoles, drop your own legally dumped files into:")
     print("    - Switch:  tools/nscb/ztools/prod.keys  (or keys.txt / ~/.switch/prod.keys — auto-synced)")
     print("    - 3DS:     tools/3ds/aes_keys.txt  (or tools/3ds/boot9.bin)")

@@ -1,6 +1,6 @@
 # Configuration Reference
 
-Project Mjolnir keeps personal configuration files (`config.toml` and `config.docker.toml`) out of Git and ships cleanly documented templates:
+Völundr keeps personal configuration files (`config.toml` and `config.docker.toml`) out of Git and ships cleanly documented templates:
 
 - **`config.example.toml`** — Desktop/workstation template (Windows & Linux profiles).
 - **`config.docker.example.toml`** — Containerized Linux/NAS template (`/app/drop` → `/library`).
@@ -11,7 +11,7 @@ Relative paths in `config.toml` are always resolved relative to the directory co
 
 ## Minimum Fields to Edit
 
-For a first-time desktop setup, you only need to set **`library_root`** for your OS (which `python setup_mjolnir.py` can do interactively for you):
+For a first-time desktop setup, you only need to set **`library_root`** for your OS (which `python setup_volundr.py` can do interactively for you):
 
 ```toml
 [paths.windows]
@@ -43,7 +43,7 @@ auto_mount_smb = true
 | `quarantine_dir` | `"./quarantine"` | Destination for unidentified files or encrypted dumps missing keys |
 
 ### `[binaries.windows]` & `[binaries.linux]`
-Explicit candidate paths checked alongside your system `PATH` (`shutil.which()`). You rarely need to edit these if tools live on `PATH` or inside `./tools/`. For `squirrel_keys`, Mjolnir checks both `keys.txt` and `prod.keys` (including `~/.switch/prod.keys`).
+Explicit candidate paths checked alongside your system `PATH` (`shutil.which()`). You rarely need to edit these if tools live on `PATH` or inside `./tools/`. For `squirrel_keys`, Völundr checks both `keys.txt` and `prod.keys` (including `~/.switch/prod.keys`).
 
 ### `[conversion]`
 Controls per-console defaults such as:

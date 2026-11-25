@@ -6,22 +6,22 @@ Requires **Python 3.11+**.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/YoungLordAce/project-mjolnir.git
-   cd project-mjolnir
+   git clone https://github.com/YoungLordAce/volundr.git
+   cd volundr
    ```
 
 2. **Run the guided setup script:**
    ```bash
-   python setup_mjolnir.py
+   python setup_volundr.py
    ```
-   `setup_mjolnir.py` uses only the Python standard library and walks you through:
+   `setup_volundr.py` uses only the Python standard library and walks you through:
    - Creating `.venv` and installing `requirements.txt`
    - Copying `config.example.toml` → `config.toml` and setting your `library_root` (never overwrites an existing `config.toml`)
    - Downloading official third-party CLI tools into `./tools/` (**All**, **Choose by console**, or **None**)
    - Running `main.py doctor` to verify your paths, auto-create `./drop`, `./.staging`, `./processed`, and `./quarantine`, and check every detected tool
 
    !!! tip "Preview Before Installing"
-       Run `python setup_mjolnir.py --dry-run` first to preview every step and official download URL without modifying files or downloading anything.
+       Run `python setup_volundr.py --dry-run` first to preview every step and official download URL without modifying files or downloading anything.
 
 3. **Drop ROMs into `./drop` and start watching:**
    ```bash
@@ -84,7 +84,36 @@ If you prefer setting up each piece by hand:
 
 ### Example `doctor` Output
 
-![Project Mjolnir Doctor Diagnostics](assets/doctor.svg)
+![Völundr Doctor Diagnostics](assets/doctor.svg)
+
+---
+
+## Updating
+
+Because `config.toml`, `config.docker.toml`, `.venv/`, everything inside `tools/`, and your runtime folders (`drop/`, `processed/`, `quarantine/`, `.staging/`) are ignored by `.gitignore`, you never need to re-clone to update:
+
+```bash
+git pull
+```
+
+If a release adds new Python dependencies, refresh them with:
+
+```bash
+# Windows
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# Linux / macOS
+./.venv/bin/pip install -r requirements.txt
+```
+
+*(You can also re-run `python setup_volundr.py` — it preserves your existing `config.toml` and skips tools you already have.)*
+
+**Docker users:**
+
+```bash
+git pull
+docker compose up -d --build
+```
 
 ---
 
@@ -94,10 +123,10 @@ If you prefer setting up each piece by hand:
 ```bash
 sudo dnf install 7zip mame-tools dolphin-emu-tool dotnet-runtime-10.0
 ```
-- `7zip` provides `7z`, `mame-tools` provides `chdman`, `dolphin-emu-tool` provides `dolphin-tool`, and `dotnet-runtime-10.0` runs the Linux x64 `psxpackager` CLI in `tools/psxpackager/psxpackager` (Mjolnir sets `DOTNET_ROLL_FORWARD=LatestMajor` automatically).
+- `7zip` provides `7z`, `mame-tools` provides `chdman`, `dolphin-emu-tool` provides `dolphin-tool`, and `dotnet-runtime-10.0` runs the Linux x64 `psxpackager` CLI in `tools/psxpackager/psxpackager` (Völundr sets `DOTNET_ROLL_FORWARD=LatestMajor` automatically).
 
 ### Full `.rar` Support on Linux (`7zz`)
-Some Linux distro `7zip` packages (`/usr/bin/7z`) omit proprietary unRAR codecs due to licensing guidelines. Download the official standalone `7zz` executable into `tools/7z/7zz` (or let `python setup_mjolnir.py --tools 7z` fetch it for you):
+Some Linux distro `7zip` packages (`/usr/bin/7z`) omit proprietary unRAR codecs due to licensing guidelines. Download the official standalone `7zz` executable into `tools/7z/7zz` (or let `python setup_volundr.py --tools 7z` fetch it for you):
 
 ```bash
 mkdir -p tools/7z
@@ -106,7 +135,7 @@ tar -xf /tmp/7z.tar.xz -C tools/7z 7zz
 chmod +x tools/7z/7zz
 ```
 
-Mjolnir probes `7z i` (cached) and automatically prioritizes a binary with RAR support over `/usr/bin/7z`.
+Völundr probes `7z i` (cached) and automatically prioritizes a binary with RAR support over `/usr/bin/7z`.
 
 ### GNOME GVFS `smb://` Auto-Mount
-On Linux desktops using GNOME Files, `[paths.linux] -> library_root` accepts either a standard mount path (`/mnt/nas/games/library/roms`) or a direct SMB URI (`smb://my-nas.local/games/library/roms`). When `auto_mount_smb = true`, Mjolnir resolves `/run/user/$UID/gvfs/` and attempts `gio mount` using saved GNOME Keyring credentials if the share is not yet mounted.
+On Linux desktops using GNOME Files, `[paths.linux] -> library_root` accepts either a standard mount path (`/mnt/nas/games/library/roms`) or a direct SMB URI (`smb://my-nas.local/games/library/roms`). When `auto_mount_smb = true`, Völundr resolves `/run/user/$UID/gvfs/` and attempts `gio mount` using saved GNOME Keyring credentials if the share is not yet mounted.

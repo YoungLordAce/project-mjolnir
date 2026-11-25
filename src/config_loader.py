@@ -45,7 +45,7 @@ def _format_missing_config_message(cfg_file: Path) -> str:
     lines = [
         f"Configuration file not found: {cfg_file}",
         "",
-        "Project Mjolnir keeps personal configuration files out of Git.",
+        "Völundr keeps personal configuration files out of Git.",
     ]
     if example_file is not None:
         example_name = example_file.name

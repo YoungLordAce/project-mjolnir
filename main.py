@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Project Mjolnir — CLI Entry Point."""
+"""Völundr — CLI Entry Point."""
 
 from __future__ import annotations
 
@@ -61,10 +61,10 @@ def _probe_write_access(directory: Path) -> tuple[bool, str]:
     if not directory.is_dir():
         return False, "Path exists but is not a directory"
 
-    probe_tmp = directory / "~syncthing~mjolnir_doctor_probe.tmp"
-    probe_final = directory / "~syncthing~mjolnir_doctor_probe2.tmp"
+    probe_tmp = directory / "~syncthing~volundr_doctor_probe.tmp"
+    probe_final = directory / "~syncthing~volundr_doctor_probe2.tmp"
     try:
-        probe_tmp.write_bytes(b"mjolnir")
+        probe_tmp.write_bytes(b"volundr")
         probe_tmp.replace(probe_final)
         probe_final.unlink(missing_ok=True)
         return True, "Writable + atomic rename verified"
@@ -239,7 +239,7 @@ def _render_doctor_report(
         console = Console()
         console.print(
             Panel.fit(
-                f"[bold cyan]Project Mjolnir v{__version__}[/bold cyan] — Environment & Config Diagnostics\n"
+                f"[bold cyan]Völundr v{__version__}[/bold cyan] — Environment & Config Diagnostics\n"
                 f"[dim]Config:[/dim] {config.config_path}\n"
                 f"[dim]Active Profile:[/dim] {config.platform_key} | "
                 f"[dim]Post-Process Action:[/dim] {config.general.post_process_action.value}",
@@ -264,7 +264,7 @@ def _render_doctor_report(
         console.print(table)
         return
 
-    print(f"=== Project Mjolnir v{__version__} Diagnostics ===")
+    print(f"=== Völundr v{__version__} Diagnostics ===")
     print(f"Config: {config.config_path} (profile={config.platform_key}, post_action={config.general.post_process_action.value})")
     print("-" * 88)
     for category, item, status, detail in checks:
@@ -628,7 +628,7 @@ def run_watch(config: PipelineConfig, scan_existing: bool = True) -> int:
         )
         console.print(
             Panel.fit(
-                f"[bold cyan]Project Mjolnir v{__version__}[/bold cyan] — Automated Watch Mode Active\n"
+                f"[bold cyan]Völundr v{__version__}[/bold cyan] — Automated Watch Mode Active\n"
                 f"[dim]Watching:[/dim]     {config.paths.watch_dir}\n"
                 f"[dim]NAS Library:[/dim]  {config.paths.library_root}\n"
                 f"[dim]Post-Action:[/dim]  {config.general.post_process_action.value} "
@@ -640,7 +640,7 @@ def run_watch(config: PipelineConfig, scan_existing: bool = True) -> int:
             )
         )
     else:
-        print(f"=== Project Mjolnir v{__version__} Watch Mode ===")
+        print(f"=== Völundr v{__version__} Watch Mode ===")
         print(f"Watching: {config.paths.watch_dir} -> {config.paths.library_root}")
         print("Press Ctrl+C to stop.")
 
@@ -694,8 +694,8 @@ def run_watch(config: PipelineConfig, scan_existing: bool = True) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="mjolnir",
-        description="Project Mjolnir — Universal Automated ROM Ingestion Pipeline",
+        prog="volundr",
+        description="Völundr — Universal Automated ROM Ingestion Pipeline",
     )
     parser.add_argument(
         "-c",
@@ -707,7 +707,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version",
         action="version",
-        version=f"Project Mjolnir {__version__}",
+        version=f"Völundr {__version__}",
     )
 
     subparsers = parser.add_subparsers(dest="command")

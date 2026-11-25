@@ -1,5 +1,5 @@
 # ==============================================================================
-# Project Mjolnir — Universal Automated ROM Ingestion Pipeline Configuration
+# Völundr — Universal Automated ROM Ingestion Pipeline Configuration
 # ==============================================================================
 # QUICK START (5-Minute First-Time Setup):
 #   1. Copy this file to `config.toml` (gitignored so your local paths stay private).
@@ -29,7 +29,7 @@ min_free_staging_gb = 5.0
 
 [paths]
 # Local pipeline working folders (auto-created on first run).
-# Change `watch_dir` if you want Mjolnir to monitor a custom downloads/intake folder.
+# Change `watch_dir` if you want Völundr to monitor a custom downloads/intake folder.
 watch_dir = "./drop"
 staging_dir = "./.staging"
 processed_dir = "./processed"
@@ -60,7 +60,7 @@ auto_mount_smb = true
 # External CLI Binaries & Optional Console Keys (Auto-Detected)
 # ==============================================================================
 # You usually DO NOT need to edit the `[binaries.*]` sections below.
-# Mjolnir automatically checks paths listed here AND your system `PATH`.
+# Völundr automatically checks paths listed here AND your system `PATH`.
 # Place optional third-party binaries or user-dumped keys into `./tools/`
 # (see `tools/README.md` for exact locations).
 

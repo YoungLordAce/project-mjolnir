@@ -1,6 +1,6 @@
 # Supported Consoles & Conversion Rules
 
-Project Mjolnir uses binary header inspection, ISO9660 volume parsing, and lightweight 16 MiB archive previews to classify ROMs accurately before extracting or converting.
+Völundr uses binary header inspection, ISO9660 volume parsing, and lightweight 16 MiB archive previews to classify ROMs accurately before extracting or converting.
 
 ---
 
@@ -25,7 +25,7 @@ Project Mjolnir uses binary header inspection, ISO9660 volume parsing, and light
 
 ## Nintendo Switch (`switch`)
 - **TitleID Family Grouping:** Groups Base + Update + DLC by Horizon OS 16-hex TitleID family (also pairs untagged No-Intro `.xci` archives with sibling updates by normalized game title and honors explicit `[BASE]` tags even if an archive has a typo'd Update TitleID).
-- **Library Donor Upgrading:** When a newer Update or DLC arrives later for a game already in `library_root/switch/`, Mjolnir pulls the existing `.xci`/`.nsp` Base donor into local `.staging/`, merges with `NSC_Builder` (`squirrel`), routes the upgraded `.xci`, and deletes the superseded file.
+- **Library Donor Upgrading:** When a newer Update or DLC arrives later for a game already in `library_root/switch/`, Völundr pulls the existing `.xci`/`.nsp` Base donor into local `.staging/`, merges with `NSC_Builder` (`squirrel`), routes the upgraded `.xci`, and deletes the superseded file.
 - **Duplicate/Older Update Guard:** Update-only drops with a numeric version `<=` the version already merged in the library donor are skipped automatically without copying or rebuilding.
 - **`.nsz`/`.xcz` Decompression:** Automatically decompresses compressed Switch packages for emulators requiring uncompressed `.nsp`/`.xci`.
 

@@ -1,4 +1,4 @@
-"""Centralized constants, file extension sets, and filename predicates across Project Mjolnir."""
+"""Centralized constants, file extension sets, and filename predicates across Völundr."""
 
 from __future__ import annotations
 

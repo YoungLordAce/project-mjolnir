@@ -1,4 +1,4 @@
-"""Unit tests for the optional guided setup script (`setup_mjolnir.py`)."""
+"""Unit tests for the optional guided setup script (`setup_volundr.py`)."""
 
 from __future__ import annotations
 
@@ -8,13 +8,13 @@ import tomllib
 import unittest
 import zipfile
 
-import setup_mjolnir as sm
+import setup_volundr as sm
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE_CONFIG = PROJECT_ROOT / "config.example.toml"
 
 
-class SetupMjolnirTests(unittest.TestCase):
+class SetupVolundrTests(unittest.TestCase):
     def test_update_library_root_in_toml_windows_and_linux(self) -> None:
         template = EXAMPLE_CONFIG.read_text(encoding="utf-8")
 

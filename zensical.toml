@@ -1,10 +1,10 @@
 [project]
-site_name = "Project Mjolnir"
+site_name = "Völundr"
 site_description = "Universal Automated ROM Ingestion Pipeline for Windows, Linux, and Docker."
-site_url = "https://younglordace.github.io/project-mjolnir/"
-repo_url = "https://github.com/YoungLordAce/project-mjolnir"
-repo_name = "YoungLordAce/project-mjolnir"
-copyright = "Copyright &copy; 2026 Project Mjolnir Contributors — MIT License"
+site_url = "https://younglordace.github.io/volundr/"
+repo_url = "https://github.com/YoungLordAce/volundr"
+repo_name = "YoungLordAce/volundr"
+copyright = "Copyright &copy; 2026 Völundr Contributors — MIT License"
 
 nav = [
     { "Home" = "index.md" },
