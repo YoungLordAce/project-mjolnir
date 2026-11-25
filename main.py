@@ -638,13 +638,19 @@ def run_watch(config: PipelineConfig, scan_existing: bool = True) -> int:
 
     def _log_event(msg: str) -> None:
         if console:
-            console.print(f"[dim][{_timestamp()}][/dim] [cyan]•[/cyan] {msg}")
+            from rich.markup import escape as rich_escape
+
+            console.print(f"[dim][{_timestamp()}][/dim] [cyan]•[/cyan] {rich_escape(msg)}")
         else:
             print(f"[{_timestamp()}] {msg}")
 
     def _on_error(path: Path, exc: Exception) -> None:
         if console:
-            console.print(f"[dim][{_timestamp()}][/dim] [bold red]✖ {path.name}:[/bold red] {exc}")
+            from rich.markup import escape as rich_escape
+
+            console.print(
+                f"[dim][{_timestamp()}][/dim] [bold red]✖ {rich_escape(path.name)}:[/bold red] {rich_escape(str(exc))}"
+            )
         else:
             print(f"[{_timestamp()}] [ERROR] {path.name}: {exc}", file=sys.stderr)
 

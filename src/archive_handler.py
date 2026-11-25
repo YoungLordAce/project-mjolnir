@@ -358,14 +358,31 @@ def inspect_archive(archive_path: Path, config: PipelineConfig) -> ArchiveInspec
     )
 
 
+_WIN_DRIVE_PREFIX_RE = re.compile(r"^[A-Za-z]:")
+_WIN_ILLEGAL_PART_CHARS_RE = re.compile(r'[<>:"|?*]')
+
+
+def _safe_host_rel_parts(posix_parts: tuple[str, ...], platform_key: str) -> tuple[str, ...]:
+    """Sanitize path components for local host extraction (e.g. `:` in game titles on Windows)."""
+    if platform_key != "windows":
+        return posix_parts
+    return tuple(_WIN_ILLEGAL_PART_CHARS_RE.sub("_", part).rstrip(" .") or "_" for part in posix_parts)
+
+
 def validate_safe_entries(entries: tuple[ArchiveEntry, ...], dest_dir: Path) -> None:
-    """Guard against Zip-Slip / path traversal attacks (`../../`) before extraction."""
+    """Guard against Zip-Slip / path traversal attacks (`../../`, drive prefixes) before extraction."""
     resolved_root = dest_dir.resolve()
     for entry in entries:
         posix_parts = PurePosixPath(entry.path).parts
-        if ".." in posix_parts or entry.path.startswith(("/", "\\")) or ":" in posix_parts[0]:
+        if (
+            not posix_parts
+            or ".." in posix_parts
+            or entry.path.startswith(("/", "\\"))
+            or _WIN_DRIVE_PREFIX_RE.match(posix_parts[0])
+        ):
             raise ArchiveError(f"Unsafe path traversal entry inside archive: {entry.path!r}")
-        candidate = (resolved_root / Path(*posix_parts)).resolve()
+        sanitized_parts = _safe_host_rel_parts(posix_parts, "windows" if os.name == "nt" else "linux")
+        candidate = (resolved_root / Path(*sanitized_parts)).resolve()
         if not candidate.is_relative_to(resolved_root):
             raise ArchiveError(f"Archive entry escapes staging directory: {entry.path!r}")
 
@@ -431,7 +448,20 @@ def extract_archive_to_staging(
                 _raise_7z_error("x", inspection.archive_path, seven_zip, proc.returncode, detail)
         elif ext == ".zip":
             with zipfile.ZipFile(inspection.archive_path, "r") as zf:
-                zf.extractall(job_dir)
+                for info in zf.infolist():
+                    norm = _normalize_internal_path(info.filename).rstrip("/")
+                    if not norm:
+                        continue
+                    safe_parts = _safe_host_rel_parts(
+                        PurePosixPath(norm).parts, config.platform_key
+                    )
+                    target_path = job_dir / Path(*safe_parts)
+                    if info.is_dir():
+                        target_path.mkdir(parents=True, exist_ok=True)
+                    else:
+                        target_path.parent.mkdir(parents=True, exist_ok=True)
+                        with zf.open(info, "r") as src_f, target_path.open("wb") as dst_f:
+                            shutil.copyfileobj(src_f, dst_f, length=1024 * 1024)
         else:
             raise ArchiveError(
                 f"`7z` binary is required to extract `{inspection.archive_path.name}`."
@@ -521,7 +551,9 @@ def extract_header_preview_to_staging(
             try:
                 with zipfile.ZipFile(inspection.archive_path, "r") as zf:
                     for entry in file_entries:
-                        out_path = preview_dir / Path(*PurePosixPath(entry.path).parts)
+                        out_path = preview_dir / Path(
+                            *_safe_host_rel_parts(PurePosixPath(entry.path).parts, config.platform_key)
+                        )
                         out_path.parent.mkdir(parents=True, exist_ok=True)
                         if _should_touch_only_in_preview(
                             entry, is_wiiu_tree, has_multitrack_cd_track01, is_vita_tree
@@ -548,7 +580,9 @@ def extract_header_preview_to_staging(
             )
 
         for entry in file_entries:
-            out_path = preview_dir / Path(*PurePosixPath(entry.path).parts)
+            out_path = preview_dir / Path(
+                *_safe_host_rel_parts(PurePosixPath(entry.path).parts, config.platform_key)
+            )
             out_path.parent.mkdir(parents=True, exist_ok=True)
             if _should_touch_only_in_preview(
                 entry, is_wiiu_tree, has_multitrack_cd_track01, is_vita_tree

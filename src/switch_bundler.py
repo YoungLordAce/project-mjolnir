@@ -43,6 +43,10 @@ _UPDATE_KEYWORD_RE = re.compile(
     r"(?:\[|\(|(?<![A-Za-z0-9]))(?:UPD(?:ATE)?|PATCH)(?:\s*[-–—_]|\s*\]|\s*\)|(?![A-Za-z0-9]))",
     re.IGNORECASE,
 )
+_BASE_KEYWORD_RE = re.compile(
+    r"[\[\(]\s*BASE(?:\s+GAME)?\s*[\]\)]",
+    re.IGNORECASE,
+)
 
 
 def _normalize_switch_title_key(raw_text: str) -> str:
@@ -143,6 +147,15 @@ def has_explicit_addon_only_tag(filename: str) -> bool:
         if g_count == 0 and (u_count > 0 or d_count > 0):
             return True
     return False
+
+
+def has_explicit_base_tag(filename: str) -> bool:
+    """
+    Return True if `filename` carries an explicit `[BASE]` / `(BASE)` / `[Base Game]` tag
+    without an add-on-only tag, overriding ROM-site filename typos where an Update TitleID
+    (`...800`) was mistakenly written on a Base cartridge dump.
+    """
+    return bool(_BASE_KEYWORD_RE.search(filename)) and not has_explicit_addon_only_tag(filename)
 
 
 def extract_title_ids_from_name(text: str) -> tuple[str, ...]:
@@ -316,9 +329,12 @@ def switch_package_sort_key(file_path: Path) -> tuple[int, int, int, str]:
         SwitchContentRole.DLC: 2,
     }
     is_addon_tagged = has_explicit_addon_only_tag(file_path.name)
+    is_base_tagged = has_explicit_base_tag(file_path.name)
     if tids:
         _, role = classify_switch_title_id(tids[0])
-        if role == SwitchContentRole.BASE and is_addon_tagged:
+        if is_base_tagged:
+            role = SwitchContentRole.BASE
+        elif role == SwitchContentRole.BASE and is_addon_tagged:
             role = (
                 SwitchContentRole.UPDATE
                 if _UPDATE_KEYWORD_RE.search(file_path.name)
@@ -357,12 +373,18 @@ def _summarize_tids(
             and all(has_explicit_addon_only_tag(n) for n in names_for_tag_check if n)
         )
     )
+    explicit_base_override = not addon_only_override and (
+        has_explicit_base_tag(path.name)
+        or any(has_explicit_base_tag(n) for n in names_for_tag_check if n)
+    )
 
     for tid in tids:
         if tid not in unique_tids:
             unique_tids.append(tid)
         fam, role = classify_switch_title_id(tid)
-        if role == SwitchContentRole.BASE and addon_only_override:
+        if explicit_base_override and role != SwitchContentRole.BASE:
+            role = SwitchContentRole.BASE
+        elif role == SwitchContentRole.BASE and addon_only_override:
             role = (
                 SwitchContentRole.UPDATE
                 if _UPDATE_KEYWORD_RE.search(" ".join([path.name, *names_for_tag_check]))

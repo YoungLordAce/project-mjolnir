@@ -57,6 +57,7 @@ from src.switch_bundler import (
     find_nas_switch_family_files,
     group_candidates_with_switch_families,
     has_explicit_addon_only_tag,
+    has_explicit_base_tag,
     is_redundant_switch_update,
     probe_switch_source,
     switch_package_sort_key,
@@ -1158,6 +1159,9 @@ def ingest_switch_bundle(
             for pkg in pkg_list:
                 if has_explicit_addon_only_tag(pkg.name):
                     continue
+                if has_explicit_base_tag(pkg.name):
+                    has_base_pkg = True
+                    break
                 tids = extract_switch_title_ids_from_file(pkg)
                 if not tids:
                     # Untagged Switch package (e.g. No-Intro `.xci` without TitleID in filename)

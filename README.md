@@ -18,6 +18,8 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
    cd project-mjolnir
    ```
 
+> **Want guided setup?** Run **`python setup_mjolnir.py`** right after cloning! It can automatically create `.venv`, set up `config.toml` with your ROM folder, download official third-party tools into `./tools/`, and run `main.py doctor` for you. *(Preview first with `python setup_mjolnir.py --dry-run`.)* Or follow the manual steps below:
+
 2. **Install Python 3.11+ dependencies:**
    ```bash
    python -m venv .venv

@@ -556,6 +556,91 @@ class SwitchBundlerTests(unittest.TestCase):
             )
             self.assertFalse(nas_2d.exists())
 
+    def test_mistagged_base_xci_with_update_tid_and_colon_in_zip_entry(self) -> None:
+        """
+        Verify a Switch `[BASE]` `.xci` archive whose filename accidentally carries an Update
+        TitleID (`...800`) is recognized as `BASE`, bundled with its Update (even when the Update
+        zip entry contains a literal `:` colon in the game title) and DLC, and sorted Base-first.
+        """
+        from src.archive_handler import ArchiveError, validate_safe_entries
+        from src.models import ArchiveEntry
+
+        with tempfile.TemporaryDirectory() as tmp_root:
+            cfg = self._make_isolated_config(Path(tmp_root))
+            drop = cfg.paths.watch_dir
+            nas_switch = cfg.paths.library_root / "switch"
+            nas_switch.mkdir(parents=True, exist_ok=True)
+
+            # Zip-Slip guard still blocks real Windows drive-letter prefixes (`C:...`)
+            with self.assertRaises(ArchiveError):
+                validate_safe_entries(
+                    (ArchiveEntry(path="C:/Windows/evil.nsp", size=10, is_dir=False),),
+                    cfg.paths.staging_dir,
+                )
+
+            base_zip = (
+                drop
+                / "The Legend of Zelda Breath of the Wild [01007EF00011E800][BASE][v1.5.0](axekin.com).zip"
+            )
+            with zipfile.ZipFile(base_zip, "w") as zf:
+                zf.writestr("Axekin.fr - Accueil.url", b"[InternetShortcut]\nURL=https://example.invalid\n")
+                zf.writestr(
+                    "The Legend of Zelda Breath of the Wild [01007EF00011E800][BASE][v1.5.0](axekin.fr).xci",
+                    b"XCI_BOTW_BASE" * 128,
+                )
+
+            dlc_zip = drop / "The Legend of Zelda Breath of the Wild DLC.zip"
+            with zipfile.ZipFile(dlc_zip, "w") as zf:
+                zf.writestr(
+                    "The Legend of Zelda Breath of the Wild DLC/DLC Pack 1 [01007EF00011F001][v196608].nsp",
+                    _build_minimal_pfs0_with_tik("01007EF00011F0010000000000000000"),
+                )
+                zf.writestr(
+                    "The Legend of Zelda Breath of the Wild DLC/DLC Pack 2 [01007EF00011F002][v196608].nsp",
+                    _build_minimal_pfs0_with_tik("01007EF00011F0020000000000000000"),
+                )
+
+            upd_zip = (
+                drop
+                / "The Legend of Zelda_ Breath of the Wild [01007EF00011E800][v1114112](axekin.com).nsp.zip"
+            )
+            with zipfile.ZipFile(upd_zip, "w") as zf:
+                zf.writestr(
+                    "The Legend of Zelda: Breath of the Wild [01007EF00011E800][v1114112](axekin.com).nsp",
+                    _build_minimal_pfs0_with_tik("01007EF00011E8000000000000000000"),
+                )
+
+            base_info = probe_switch_source(base_zip, cfg)
+            self.assertIsNotNone(base_info)
+            assert base_info is not None
+            self.assertEqual(base_info.primary_family_id, "01007EF00011E000")
+            self.assertTrue(base_info.has_base)
+            self.assertFalse(base_info.is_addon_only)
+
+            merged_items = []
+
+            def _fake_botw_convert(item, job_dir: Path, _config):
+                merged_items.append(item)
+                out_xci = job_dir / "The Legend of Zelda Breath of the Wild [01007EF00011E000] [v1114112] (1G+1U+2D).xci"
+                out_xci.write_bytes(b"MERGED_BOTW" * 128)
+                return ConversionArtifact(
+                    system_id="switch",
+                    output_files=(out_xci,),
+                    converted=True,
+                    tool_used="squirrel",
+                )
+
+            with patch("src.router.convert_identified_item", side_effect=_fake_botw_convert):
+                outcomes, errs = scan_watch_dir_once(cfg, dry_run=False, verify_stability=False)
+
+            self.assertEqual(errs, 0)
+            self.assertEqual(len(outcomes), 1)
+            self.assertEqual(len(merged_items), 1)
+            id_item = merged_items[0]
+            self.assertTrue(id_item.primary_file.name.endswith(".xci"))
+            self.assertEqual(len(id_item.companion_files), 3)
+            self.assertIn("01007EF00011E800", id_item.companion_files[0].name)
+
 
 if __name__ == "__main__":
     unittest.main()
