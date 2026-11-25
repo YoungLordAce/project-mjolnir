@@ -4,7 +4,7 @@ site_description = "Universal Automated ROM Ingestion Pipeline for Windows, Linu
 site_url = "https://younglordace.github.io/volundr/"
 repo_url = "https://github.com/YoungLordAce/volundr"
 repo_name = "YoungLordAce/volundr"
-copyright = "Copyright &copy; 2026 Völundr Contributors — MIT License"
+copyright = "Copyright &copy; 2026 Völundr Contributors — GNU GPLv3"
 
 nav = [
     { "Home" = "index.md" },

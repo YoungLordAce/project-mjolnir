@@ -1,7 +1,7 @@
 # Völundr
 
 [![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://younglordace.github.io/volundr/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue)](LICENSE)
 
 **Drop ROM archives in -> get clean, compressed, emulator-ready games sorted into your library automatically.**
 
@@ -138,10 +138,10 @@ Browse the full documentation site at **[younglordace.github.io/volundr](https:/
 
 ## Note & Disclaimer
 
-> **Project Status:** This is a personal homelab project shared as-is under the [MIT License](LICENSE). Pull requests and bug reports are welcome; support is best-effort.
+> **Project Status:** This is a personal homelab project shared as-is under the [GNU General Public License v3.0](LICENSE). Pull requests and bug reports are welcome; support is best-effort.
 >
 > **Disclaimer:** Völundr includes **no** copyrighted ROMs, BIOS files, console decryption keys, license databases, or third-party executables. You must supply your own legal dumps, keys dumped from hardware you own, and third-party CLI tools.
 
 ## License
 
-Licensed under the [MIT License](LICENSE).
+Licensed under the [GNU General Public License v3.0 (GPLv3)](LICENSE).

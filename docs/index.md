@@ -43,6 +43,6 @@ Völundr is a cross-platform Python 3.11+ automated ROM ingestion pipeline for *
 ---
 
 !!! note "Project Status & Legal Disclaimer"
-    Völundr is a personal homelab project shared as-is under the MIT License. Pull requests and bug reports are welcome; support is best-effort.
+    Völundr is a personal homelab project shared as-is under the GNU General Public License v3.0 (GPLv3). Pull requests and bug reports are welcome; support is best-effort.
 
     Völundr includes **no** copyrighted ROMs, games, BIOS files, console decryption keys, license databases, or third-party executables. Users must supply their own legal game dumps, console keys dumped from hardware they own, and third-party CLI tools.
