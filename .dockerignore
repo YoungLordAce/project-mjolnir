@@ -18,5 +18,10 @@ quarantine/
 tools/*
 !tools/README.md
 tests/
+docs/
+site/
+.cache/
+.github/
+zensical.toml
 *.log
 *.tmp

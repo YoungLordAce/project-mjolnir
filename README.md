@@ -1,12 +1,13 @@
 # Project Mjolnir
 
+[![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://younglordace.github.io/project-mjolnir/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 **Drop ROM archives in -> get clean, compressed, emulator-ready games sorted into your library automatically.**
 
 Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipeline for **Windows**, **Linux**, and **Docker**. Drop `.zip`, `.7z`, `.rar`, raw disc images, or folders into `./drop` and Mjolnir identifies the console, converts to the optimal format (`.chd`, `.pbp`, `.rvz`, `.xci`, `.cci`, `.wua`, Vita3K `.zip`), and moves everything safely into your local folder or NAS.
 
-> **Note:** This is a personal homelab project shared as-is under the [MIT License](LICENSE). Pull requests and bug reports are welcome; support is best-effort.
->
-> **Disclaimer:** Project Mjolnir includes **no** copyrighted ROMs, BIOS files, console decryption keys, license databases, or third-party executables. You must supply your own legal dumps, keys dumped from hardware you own, and third-party CLI tools.
+**Full Documentation:** [younglordace.github.io/project-mjolnir](https://younglordace.github.io/project-mjolnir/)
 
 ---
 
@@ -71,7 +72,7 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
 
 </details>
 
-> **Running on a NAS / Docker?** The included [`Dockerfile`](Dockerfile) pre-installs almost every tool automatically. See [`DOCUMENTATION.md`](DOCUMENTATION.md#docker-deployment-247-headless-nas--romarr) for the Docker setup guide.
+> **Running on a NAS / Docker?** The included [`Dockerfile`](Dockerfile) pre-installs almost every tool automatically. See the **[Docker & NAS Guide](https://younglordace.github.io/project-mjolnir/docker-nas/)** for details.
 
 ---
 
@@ -118,10 +119,18 @@ Supply your own files dumped from hardware you own (everything inside `tools/` i
 
 ## Detailed Documentation
 
-Looking for deeper technical details? See **[`DOCUMENTATION.md`](DOCUMENTATION.md)** for:
-- Per-console conversion rules (5-way arcade split, multi-disc `.pbp` vs `_discs/` + `.m3u`, CUE healing, Switch donor caching, 3DS/Wii U/PS Vita behavior)
-- **Docker**, **NAS + Syncthing**, **ROMarr** two-library setup, and Linux `7zz` / GNOME GVFS `smb://` notes
-- Configuration options, `src/` architecture overview, and running the unit test suite
+Browse the full documentation site at **[younglordace.github.io/project-mjolnir](https://younglordace.github.io/project-mjolnir/)** (source in [`docs/`](docs/)) for:
+- **[Supported Consoles](https://younglordace.github.io/project-mjolnir/consoles/):** Per-console conversion rules, multi-disc `.pbp` vs `_discs/` + `.m3u`, CUE healing, Switch donor caching & duplicate update skip, 3DS/Wii U/PS Vita behavior
+- **[Docker & NAS](https://younglordace.github.io/project-mjolnir/docker-nas/):** 24/7 headless Docker deployment, Syncthing atomic transfers, and ROMarr two-library integration
+- **[Configuration](https://younglordace.github.io/project-mjolnir/configuration/) & [Architecture](https://younglordace.github.io/project-mjolnir/architecture/):** Full `config.toml` reference, `src/` module map, and running tests
+
+---
+
+## Note & Disclaimer
+
+> **Project Status:** This is a personal homelab project shared as-is under the [MIT License](LICENSE). Pull requests and bug reports are welcome; support is best-effort.
+>
+> **Disclaimer:** Project Mjolnir includes **no** copyrighted ROMs, BIOS files, console decryption keys, license databases, or third-party executables. You must supply your own legal dumps, keys dumped from hardware you own, and third-party CLI tools.
 
 ## License
 

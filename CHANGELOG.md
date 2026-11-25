@@ -9,6 +9,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATC
 - **Guided Setup Script (`setup_mjolnir.py`):** Stdlib-only interactive installer that creates `.venv`, generates `config.toml` with your `library_root`, downloads official upstream CLI tools into `tools/` (with `--dry-run`, `--yes`, and per-tool selection), and runs `main.py doctor`. Made the default Quick Start method in `README.md`.
 - **Automatic Switch `prod.keys` → `keys.txt` Sync:** Auto-discovers standard Switch `prod.keys` (in `tools/nscb/ztools/`, `tools/nscb/`, `tools/switch/`, or `~/.switch/prod.keys`) and automatically copies/refreshes it to `keys.txt` for `NSC_Builder` (`squirrel`) without modifying the original `prod.keys`.
 - **Duplicate/Older Switch Update Guard:** Update-only Switch drops with a numeric version `<=` the version already merged in the library donor now skip copying and rebuilding, saving multi-GB network/disk I/O while safely cleaning up the dropped file.
+- **Zensical Documentation Site:** Added `zensical.toml`, `docs/`, and `.github/workflows/docs.yml` for automated GitHub Pages deployment.
 
 ### Fixed
 - **Untagged No-Intro Switch `.xci` Pairing in `watch` Mode:** Pairs untagged Switch Base archives with sibling TitleID-bearing Updates/DLCs in `drop/` by normalized game title and passes `game_title_hint` when checking the library for an untagged Base donor.

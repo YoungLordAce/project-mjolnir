@@ -45,3 +45,7 @@ env/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Zensical local docs build output & cache
+site/
+.cache/

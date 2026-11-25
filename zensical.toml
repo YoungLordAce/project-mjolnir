@@ -1,0 +1,54 @@
+[project]
+site_name = "Project Mjolnir"
+site_description = "Universal Automated ROM Ingestion Pipeline for Windows, Linux, and Docker."
+site_url = "https://younglordace.github.io/project-mjolnir/"
+repo_url = "https://github.com/YoungLordAce/project-mjolnir"
+repo_name = "YoungLordAce/project-mjolnir"
+copyright = "Copyright &copy; 2026 Project Mjolnir Contributors — MIT License"
+
+nav = [
+    { "Home" = "index.md" },
+    { "Getting Started" = "getting-started.md" },
+    { "Tools & Keys" = "tools-and-keys.md" },
+    { "Supported Consoles" = "consoles.md" },
+    { "Docker & NAS" = "docker-nas.md" },
+    { "Configuration" = "configuration.md" },
+    { "Architecture" = "architecture.md" },
+    { "Changelog" = "changelog.md" },
+]
+
+[project.theme]
+variant = "modern"
+language = "en"
+features = [
+    "navigation.instant",
+    "navigation.instant.prefetch",
+    "navigation.tracking",
+    "navigation.tabs",
+    "navigation.sections",
+    "navigation.top",
+    "search.suggest",
+    "search.highlight",
+    "content.code.copy",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "indigo"
+accent = "cyan"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "indigo"
+accent = "cyan"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
