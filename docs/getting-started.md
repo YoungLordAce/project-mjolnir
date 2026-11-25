@@ -82,6 +82,10 @@ If you prefer setting up each piece by hand:
 | `python main.py scan [--dry-run] [--no-wait]` | One-shot sequential pass over everything currently sitting in `./drop` |
 | `python main.py watch [--no-backlog]` | Continuous daemon monitoring `./drop` for newly dropped downloads/archives |
 
+### Example `doctor` Output
+
+![Project Mjolnir Doctor Diagnostics](assets/doctor.svg)
+
 ---
 
 ## Linux Notes

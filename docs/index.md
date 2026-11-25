@@ -4,6 +4,8 @@
 
 Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipeline for **Windows**, **Linux**, and **Docker**. Drop `.zip`, `.7z`, `.rar`, raw disc images, or folders into `./drop` and Mjolnir identifies the console via binary headers, converts to the optimal emulator format (`.chd`, `.pbp`, `.rvz`, `.xci`, `.cci`, `.wua`, Vita3K `.zip`), and routes everything atomically into your local drive or NAS.
 
+![Project Mjolnir Watch Mode](assets/watch.svg)
+
 ---
 
 ## Key Highlights
@@ -20,6 +22,10 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
   - PlayStation Vita → Vita3K `.zip` repacking + `.pkg` unpacking + Cocoon FE `.dpt` tag generation
 - **Syncthing & Samba Safe:** Stages locally in `.staging/`, streams to `~syncthing~*.tmp`, verifies byte sizes, and commits atomically via `os.replace()`.
 - **Guided Setup Script:** Get running in 3 steps with `python setup_mjolnir.py`.
+
+### Zero-Extraction Archive & Header Inspection
+
+![Project Mjolnir Inspect Mode](assets/inspect.svg)
 
 ---
 

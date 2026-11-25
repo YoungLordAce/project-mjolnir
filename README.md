@@ -9,6 +9,8 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
 
 **Full Documentation:** [younglordace.github.io/project-mjolnir](https://younglordace.github.io/project-mjolnir/)
 
+![Project Mjolnir Watch Mode](docs/assets/watch.svg)
+
 ---
 
 ## Quick Start (3 Steps)
