@@ -60,6 +60,56 @@ class ConfigLoaderUXTests(unittest.TestCase):
             self.assertIn("python main.py doctor", err_text)
             self.assertNotIn("Traceback", err_text)
 
+    def test_switch_prod_keys_auto_discovered_and_synced_to_keys_txt(self) -> None:
+        import os
+        from src.converter import ensure_squirrel_keys_txt
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            cfg_file = root / "config.toml"
+            cfg_file.write_text(EXAMPLE_CONFIG.read_text(encoding="utf-8"), encoding="utf-8")
+
+            ztools = root / "tools" / "nscb" / "ztools"
+            ztools.mkdir(parents=True)
+            fake_sq = ztools / "squirrel.exe"
+            fake_sq.write_bytes(b"FAKE_SQ")
+            prod_keys = ztools / "prod.keys"
+            prod_keys.write_text("header_key = 00\n", encoding="utf-8")
+
+            cfg = load_config(cfg_file, platform_override="windows")
+            self.assertEqual(cfg.binaries.squirrel, fake_sq.resolve())
+            self.assertEqual(cfg.binaries.squirrel_keys, prod_keys.resolve())
+
+            synced = ensure_squirrel_keys_txt(cfg)
+            self.assertEqual(synced, ztools.resolve() / "keys.txt")
+            self.assertTrue(synced.is_file())
+            self.assertTrue(prod_keys.is_file())
+            self.assertEqual(synced.read_text(encoding="utf-8"), "header_key = 00\n")
+
+            # Updating prod.keys with a newer mtime refreshes keys.txt automatically
+            prod_keys.write_text("header_key = 11\n", encoding="utf-8")
+            future_ns = synced.stat().st_mtime_ns + 5_000_000_000
+            os.utime(prod_keys, ns=(future_ns, future_ns))
+
+            cfg_after = load_config(cfg_file, platform_override="windows")
+            synced2 = ensure_squirrel_keys_txt(cfg_after)
+            self.assertEqual(synced2.read_text(encoding="utf-8"), "header_key = 11\n")
+
+    def test_render_routing_outcome_preserves_bracketed_version_tags(self) -> None:
+        from contextlib import redirect_stdout
+        from src.models import RoutingOutcome
+
+        outcome = RoutingOutcome(
+            source_path=Path("drop/Broforce.rar"),
+            routed_files=(Path("roms/switch/Broforce [010060A00B53C000] [v262144] (1G+1U).xci"),),
+            post_action_taken="moved source -> processed/Broforce [v262144].rar",
+        )
+        out_buf = io.StringIO()
+        with redirect_stdout(out_buf):
+            cli_main._render_routing_outcome(outcome)
+        rendered = out_buf.getvalue()
+        self.assertIn("[v262144]", rendered)
+
 
 if __name__ == "__main__":
     unittest.main()

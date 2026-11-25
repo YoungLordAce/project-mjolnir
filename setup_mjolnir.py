@@ -831,7 +831,7 @@ def _install_switch(project_root: Path, platform_key: str, arch: str, force: boo
         return ToolStepResult(
             "switch",
             "installed",
-            f"Installed `{dest_exe}` (remember to place your own `keys.txt` in `tools/nscb/ztools/keys.txt`)",
+            f"Installed `{dest_exe}` (drop your `prod.keys` or `keys.txt` in `tools/nscb/ztools/` or `~/.switch/prod.keys`)",
         )
 
     # Linux: install `nsz` inside `.venv` for `.nsz`/`.xcz` decompression
@@ -1053,7 +1053,7 @@ def main(argv: list[str] | None = None) -> int:
     print("\n[Step 4/4] Verification & User-Supplied Keys Reminder")
     print("  Project Mjolnir NEVER downloads copyrighted console keys or license DBs.")
     print("  If you ingest these consoles, drop your own legally dumped files into:")
-    print("    - Switch:  tools/nscb/ztools/keys.txt")
+    print("    - Switch:  tools/nscb/ztools/prod.keys  (or keys.txt / ~/.switch/prod.keys — auto-synced)")
     print("    - 3DS:     tools/3ds/aes_keys.txt  (or tools/3ds/boot9.bin)")
     print("    - PS Vita: tools/psvita/PSV_GAMES.tsv  (optional)")
 

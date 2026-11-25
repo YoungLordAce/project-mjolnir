@@ -10,7 +10,7 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
 
 ---
 
-## Quick Start (5-Minute Setup)
+## Quick Start (3 Steps)
 
 1. **Clone the repository:**
    ```bash
@@ -18,9 +18,26 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
    cd project-mjolnir
    ```
 
-> **Want guided setup?** Run **`python setup_mjolnir.py`** right after cloning! It can automatically create `.venv`, set up `config.toml` with your ROM folder, download official third-party tools into `./tools/`, and run `main.py doctor` for you. *(Preview first with `python setup_mjolnir.py --dry-run`.)* Or follow the manual steps below:
+2. **Run the guided setup script** *(requires Python 3.11+)*:
+   ```bash
+   python setup_mjolnir.py
+   ```
+   It walks you through creating `.venv`, generating `config.toml` with your ROM library folder, downloading official third-party tools into `./tools/` (you can pick **All** or **Choose by console**), auto-creating `./drop`, `./processed`, `./quarantine`, and `./.staging`, and running `main.py doctor` to verify everything.
+   *(Want to preview first without downloading anything? Run `python setup_mjolnir.py --dry-run`.)*
 
-2. **Install Python 3.11+ dependencies:**
+3. **Drop ROMs into `./drop` and start watching:**
+   ```bash
+   # Windows
+   .\.venv\Scripts\python.exe main.py watch
+
+   # Linux / macOS
+   ./.venv/bin/python main.py watch
+   ```
+
+<details>
+<summary><strong>Manual Setup (without the setup script)</strong></summary>
+
+1. **Create a virtual environment and install dependencies:**
    ```bash
    python -m venv .venv
 
@@ -31,7 +48,7 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
    ./.venv/bin/pip install -r requirements.txt
    ```
 
-3. **Create your local `config.toml`:**
+2. **Create your local `config.toml`:**
    ```bash
    # Windows (PowerShell)
    Copy-Item config.example.toml config.toml
@@ -41,9 +58,9 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
    ```
    Open `config.toml` and set **`library_root`** under `[paths.windows]` or `[paths.linux]` to your destination ROM folder (local drive, mapped NAS drive, UNC share, or Linux `smb://` URI). Optionally change `watch_dir` if you want to watch a folder other than `./drop`.
 
-4. **Add the external tools you need** (see the table below — you only need tools for the consoles you actually collect).
+3. **Download any external tools you need** from the table below into `./tools/` (or onto your system `PATH`).
 
-5. **Check your setup** *(automatically creates `./drop`, `./.staging`, `./processed`, and `./quarantine`)*:
+4. **Verify your setup** *(automatically creates `./drop`, `./.staging`, `./processed`, and `./quarantine`)*:
    ```bash
    # Windows
    .\.venv\Scripts\python.exe main.py doctor
@@ -52,15 +69,7 @@ Project Mjolnir is a cross-platform Python 3.11+ automated ROM ingestion pipelin
    ./.venv/bin/python main.py doctor
    ```
 
-6. **Run the pipeline:**
-   Drop files into `./drop` and start watching:
-   ```bash
-   # Windows
-   .\.venv\Scripts\python.exe main.py watch
-
-   # Linux / macOS
-   ./.venv/bin/python main.py watch
-   ```
+</details>
 
 > **Running on a NAS / Docker?** The included [`Dockerfile`](Dockerfile) pre-installs almost every tool automatically. See [`DOCUMENTATION.md`](DOCUMENTATION.md#docker-deployment-247-headless-nas--romarr) for the Docker setup guide.
 
@@ -89,7 +98,7 @@ Supply your own files dumped from hardware you own (everything inside `tools/` i
 
 | System | Files | Where to Place Them | What It Enables |
 | :--- | :--- | :--- | :--- |
-| **Nintendo Switch** | `keys.txt` | `tools/nscb/ztools/keys.txt` | Required by `squirrel` for Switch `.xci` merging & `.nsz` decompression |
+| **Nintendo Switch** | `prod.keys` *(or `keys.txt`)* | `tools/nscb/ztools/` *(or `~/.switch/prod.keys`)* | Required by `squirrel` for Switch `.xci` merging & `.nsz` decompression *(Mjolnir auto-copies `prod.keys` → `keys.txt`)* |
 | **Nintendo 3DS** | `aes_keys.txt` or `boot9.bin` | `tools/3ds/` | Auto-decrypts encrypted `.3ds` dumps to `.cci` for Azahar *(ZeroKey dumps work without keys)* |
 | **PS Vita** | `PSV_GAMES.tsv`, `PSV_DLCS.tsv`, `PSV_UPDATES.tsv` | `tools/psvita/` | Automatic `zRIF`/`work.bin` license generation and title normalization for `.pkg` files |
 

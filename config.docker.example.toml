@@ -41,7 +41,11 @@ seven_zip = ["/usr/local/bin/7zz", "7zz"]
 chdman = ["/usr/bin/chdman", "chdman"]
 dolphin_tool = ["/usr/bin/dolphin-tool", "dolphin-tool"]
 squirrel = ["/opt/nscb/ztools/squirrel.py", "nsz"]
-squirrel_keys = "/app/tools/nscb/ztools/keys.txt"
+squirrel_keys = [
+    "/app/tools/nscb/ztools/keys.txt",
+    "/app/tools/nscb/ztools/prod.keys",
+    "/app/tools/nscb/prod.keys",
+]
 psxpackager = ["/app/tools/psxpackager/psxpackager", "psxpackager"]
 ctr_keys = [
     "/app/tools/3ds/aes_keys.txt",

@@ -66,6 +66,15 @@ DEFAULT_CTR_KEY_RELPATHS: tuple[str, ...] = (
     "./tools/3ds/keys.txt",
 )
 
+# Default candidate paths for Nintendo Switch keys (accepts standard `prod.keys` or NSCB `keys.txt`)
+DEFAULT_SWITCH_KEY_RELPATHS: tuple[str, ...] = (
+    "./tools/nscb/ztools/keys.txt",
+    "./tools/nscb/ztools/prod.keys",
+    "./tools/nscb/prod.keys",
+    "./tools/switch/prod.keys",
+    "~/.switch/prod.keys",
+)
+
 # Platform subfolder names created by ROMarr/Gamarr (e.g. `drop/switch/Game.xci`).
 # When present directly inside `watch_dir`, their children are processed individually
 # instead of treating the entire platform folder as one game unit.

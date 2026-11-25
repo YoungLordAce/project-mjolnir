@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
-from src.constants import DEFAULT_CTR_KEY_RELPATHS
+from src.constants import DEFAULT_CTR_KEY_RELPATHS, DEFAULT_SWITCH_KEY_RELPATHS
 from src.models import (
     ArchivePolicy,
     BinaryPaths,
@@ -465,7 +465,10 @@ def load_config(
             project_root,
         ),
         squirrel_keys=resolve_optional_file(
-            plat_bins.get("squirrel_keys"),
+            [
+                *_as_str_list(plat_bins.get("squirrel_keys"), f"binaries.{platform_key}.squirrel_keys"),
+                *DEFAULT_SWITCH_KEY_RELPATHS,
+            ],
             project_root,
         ),
         psxpackager=resolve_binary(

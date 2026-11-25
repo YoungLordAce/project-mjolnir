@@ -77,7 +77,12 @@ dolphin_tool = [
     'C:\Program Files\Dolphin-x64\DolphinTool.exe',
 ]
 squirrel = ["./tools/nscb/ztools/squirrel.exe"]
-squirrel_keys = "./tools/nscb/ztools/keys.txt"
+squirrel_keys = [
+    "./tools/nscb/ztools/keys.txt",
+    "./tools/nscb/ztools/prod.keys",
+    "./tools/nscb/prod.keys",
+    "~/.switch/prod.keys",
+]
 psxpackager = ["./tools/psxpackager/psxpackager.exe"]
 ctr_keys = [
     "./tools/3ds/aes_keys.txt",
@@ -108,7 +113,12 @@ seven_zip = [
 chdman = ["chdman", "/usr/bin/chdman"]
 dolphin_tool = ["dolphin-tool", "DolphinTool", "/usr/bin/dolphin-tool"]
 squirrel = ["./tools/nscb/ztools/squirrel.py", "./tools/nscb/py/ztools/squirrel.py", "./tools/nscb/squirrel.py", "nsz"]
-squirrel_keys = "./tools/nscb/ztools/keys.txt"
+squirrel_keys = [
+    "./tools/nscb/ztools/keys.txt",
+    "./tools/nscb/ztools/prod.keys",
+    "./tools/nscb/prod.keys",
+    "~/.switch/prod.keys",
+]
 psxpackager = [
     "./tools/psxpackager/psxpackager",
     "psxpackager",

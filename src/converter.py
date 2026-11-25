@@ -794,6 +794,74 @@ def _convert_rvz(
     return out_rvz
 
 
+def ensure_squirrel_keys_txt(config: PipelineConfig) -> Path:
+    """
+    Ensure NSC_Builder (`squirrel`) has a readable `keys.txt` beside its executable/script.
+
+    Users commonly supply standard Switch `prod.keys` (e.g. in `tools/nscb/ztools/prod.keys` or
+    `~/.switch/prod.keys`) rather than NSCB's `keys.txt`. When `prod.keys` is present (or newer
+    than an existing `keys.txt`), automatically copy it to `<squirrel_dir>/keys.txt` without
+    modifying or deleting the original `prod.keys`.
+    """
+    if config.binaries.squirrel is None:
+        raise MissingToolError("Switch conversion requires `squirrel` (NSC_Builder).")
+    if config.binaries.squirrel_keys is None or not config.binaries.squirrel_keys.is_file():
+        raise MissingToolError(
+            "Switch crypto requires `prod.keys` or `keys.txt` "
+            "(place `prod.keys` in `tools/nscb/ztools/` or `~/.switch/prod.keys`)."
+        )
+
+    expected_keys_txt = config.binaries.squirrel.parent / "keys.txt"
+    source_keys = config.binaries.squirrel_keys
+
+    # If `keys.txt` already exists, check whether a sibling `prod.keys` has been updated more recently
+    if expected_keys_txt.is_file() and source_keys.resolve() == expected_keys_txt.resolve():
+        newer_candidates = (
+            expected_keys_txt.parent / "prod.keys",
+            config.paths.project_root / "tools" / "nscb" / "ztools" / "prod.keys",
+            config.paths.project_root / "tools" / "nscb" / "prod.keys",
+            config.paths.project_root / "tools" / "switch" / "prod.keys",
+        )
+        cur_mtime = expected_keys_txt.stat().st_mtime_ns
+        for cand in newer_candidates:
+            try:
+                if cand.is_file() and cand.stat().st_mtime_ns > cur_mtime:
+                    source_keys = cand
+                    cur_mtime = cand.stat().st_mtime_ns
+            except OSError:
+                continue
+
+    try:
+        if expected_keys_txt.is_file() and source_keys.resolve() == expected_keys_txt.resolve():
+            return expected_keys_txt
+    except OSError:
+        pass
+
+    # Skip redundant write if `expected_keys_txt` already matches `source_keys` size & mtime
+    try:
+        if expected_keys_txt.is_file():
+            src_st = source_keys.stat()
+            dst_st = expected_keys_txt.stat()
+            if dst_st.st_size == src_st.st_size and dst_st.st_mtime_ns >= src_st.st_mtime_ns:
+                return expected_keys_txt
+    except OSError:
+        pass
+
+    try:
+        # In Docker, `/opt/nscb/ztools/keys.txt` may be a symlink pointing into read-only `/app/tools`;
+        # replace a dangling or mismatched symlink cleanly with a real copy in writable `/opt/nscb/ztools/`.
+        if expected_keys_txt.is_symlink():
+            expected_keys_txt.unlink(missing_ok=True)
+        expected_keys_txt.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_keys, expected_keys_txt)
+    except OSError as exc:
+        raise ConversionError(
+            f"Could not sync Switch keys from `{source_keys}` to `{expected_keys_txt}`: {exc}"
+        ) from exc
+
+    return expected_keys_txt
+
+
 def _merge_switch_bundle(
     item: IdentificationResult,
     job_dir: Path,
@@ -805,10 +873,7 @@ def _merge_switch_bundle(
         raise MissingToolError(
             "Multi-file Switch `.xci` merging requires NSC_Builder (`squirrel`), not standalone `nsz`."
         )
-    if config.binaries.squirrel_keys is None:
-        raise MissingToolError(
-            "Multi-file Switch merging requires `keys.txt` (`binaries.<os>.squirrel_keys`)."
-        )
+    ensure_squirrel_keys_txt(config)
 
     out_dir = job_dir / "_switch_merged"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -866,10 +931,7 @@ def _decompress_switch_package(
     if sq_name == "nsz":
         cmd = [*base_cmd, "-D", "-o", str(out_dir.resolve()), str(input_path.resolve())]
     else:
-        if config.binaries.squirrel_keys is None:
-            raise MissingToolError(
-                f"Decompressing `{input_path.name}` via `squirrel` requires `keys.txt`."
-            )
+        ensure_squirrel_keys_txt(config)
         cmd = [*base_cmd, "-dcpr", str(input_path.resolve()), "-o", str(out_dir.resolve())]
 
     _run_streaming_subprocess(

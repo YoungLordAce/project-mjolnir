@@ -23,7 +23,7 @@ tools/
 ├── nscb/
 │   └── ztools/
 │       ├── squirrel.exe        # Windows (or squirrel.py on Linux)
-│       └── keys.txt            # User-supplied Switch keys
+│       └── prod.keys           # User-supplied Switch keys (`prod.keys` or `keys.txt` — auto-synced)
 ├── 3ds/
 │   ├── aes_keys.txt            # User-supplied 3DS keys (or boot9.bin)
 │   └── boot9.bin

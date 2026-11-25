@@ -173,7 +173,7 @@ def run_doctor(config: PipelineConfig) -> int:
         ("psxpackager (PS1 Multi-Disc)", config.binaries.psxpackager, "Required for multi-disc PS1 .pbp merging"),
         ("DolphinTool (GC/Wii)", config.binaries.dolphin_tool, "Required for .rvz conversion"),
         ("squirrel (Switch NSCB)", config.binaries.squirrel, "Required for Switch XCI merge / NSZ"),
-        ("Switch keys.txt", config.binaries.squirrel_keys, "Required by squirrel for Switch crypto"),
+        ("Switch keys (prod.keys)", config.binaries.squirrel_keys, "Required for Switch — place prod.keys (or keys.txt) in tools/nscb/ztools/ or ~/.switch/prod.keys"),
         ("3DS keys (aes_keys/boot9)", config.binaries.ctr_keys, "Optional: required to auto-decrypt encrypted .3ds ROMs"),
         ("zarchive (Wii U .wua)", config.binaries.zarchive, "Optional: packs Wii U Loadiine folders into .wua"),
         ("cdecrypt (Wii U NUS)", config.binaries.cdecrypt, "Optional: required to decrypt encrypted Wii U WUP/NUS packages"),
@@ -191,6 +191,13 @@ def run_doctor(config: PipelineConfig) -> int:
                         "WARN",
                         f"{path_val} — Lacks RAR support (Fedora distro build excludes unrar). .rar extraction will fail. Place official 7zz in tools/7z/7zz",
                     ))
+            elif label.startswith("Switch keys") and path_val.name.lower() != "keys.txt":
+                checks.append((
+                    "Binaries",
+                    label,
+                    "OK",
+                    f"{path_val} (auto-synced to keys.txt for squirrel)",
+                ))
             else:
                 checks.append(("Binaries", label, "OK", str(path_val)))
         else:
@@ -485,6 +492,7 @@ def _render_routing_outcome(outcome: RoutingOutcome) -> None:
     is_deferred = outcome.post_action_taken.startswith(("deferred", "skipped"))
     if _has_module("rich"):
         from rich.console import Console
+        from rich.markup import escape as rich_escape
         from rich.panel import Panel
 
         console = Console()
@@ -493,19 +501,19 @@ def _render_routing_outcome(outcome: RoutingOutcome) -> None:
             all_srcs = (outcome.source_path, *outcome.additional_sources)
             lines = [f"{mode_tag}[bold cyan]Source Bundle ({len(all_srcs)} items):[/bold cyan]"]
             for sp in all_srcs:
-                lines.append(f"  [dim]•[/dim] {sp}")
+                lines.append(f"  [dim]•[/dim] {rich_escape(str(sp))}")
         else:
-            lines = [f"{mode_tag}[bold cyan]Source:[/bold cyan] {outcome.source_path}"]
+            lines = [f"{mode_tag}[bold cyan]Source:[/bold cyan] {rich_escape(str(outcome.source_path))}"]
 
         for rf in outcome.routed_files:
-            lines.append(f"  [bold green]✔ Routed:[/bold green] {rf}")
+            lines.append(f"  [bold green]✔ Routed:[/bold green] {rich_escape(str(rf))}")
         for sf in outcome.superseded_files:
-            lines.append(f"  [bold cyan]↻ Replaced on NAS:[/bold cyan] {sf}")
+            lines.append(f"  [bold cyan]↻ Replaced on NAS:[/bold cyan] {rich_escape(str(sf))}")
         for m3u in outcome.m3u_playlists:
-            lines.append(f"  [bold magenta]♫ Playlist (.m3u):[/bold magenta] {m3u}")
+            lines.append(f"  [bold magenta]♫ Playlist (.m3u):[/bold magenta] {rich_escape(str(m3u))}")
         for qf in outcome.quarantined_files:
-            lines.append(f"  [bold yellow]⚠ Quarantined:[/bold yellow] {qf}")
-        lines.append(f"  [dim]Post-Process:[/dim] {outcome.post_action_taken}")
+            lines.append(f"  [bold yellow]⚠ Quarantined:[/bold yellow] {rich_escape(str(qf))}")
+        lines.append(f"  [dim]Post-Process:[/dim] {rich_escape(outcome.post_action_taken)}")
         border = "yellow" if (outcome.quarantined_files or outcome.dry_run or is_deferred) else "green"
         console.print(Panel("\n".join(lines), border_style=border))
         return
