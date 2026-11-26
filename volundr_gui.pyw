@@ -10,6 +10,7 @@ a local `.venv` exists, automatically delegates to `.venv`'s `pythonw.exe`.
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import subprocess
 import sys
 
@@ -37,6 +38,12 @@ def _reexec_in_venv_if_needed() -> bool:
 def main() -> int:
     if _reexec_in_venv_if_needed():
         return 0
+
+    # Under windowless `pythonw.exe`, sys.stdout / sys.stderr are None — redirect safely to devnull
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, "w", encoding="utf-8")
+    if sys.stderr is None:
+        sys.stderr = open(os.devnull, "w", encoding="utf-8")
 
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))

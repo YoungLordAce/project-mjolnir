@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import os
 from pathlib import Path
 import signal
 import subprocess
@@ -985,6 +986,11 @@ def run_gui_app(
     auto_watch: bool | None = None,
 ) -> int:
     """Create the `QApplication`, load config, and start the Qt event loop."""
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, "w", encoding="utf-8")
+    if sys.stderr is None:
+        sys.stderr = open(os.devnull, "w", encoding="utf-8")
+
     _set_windows_app_user_model_id()
 
     app = QApplication.instance()

@@ -26,7 +26,7 @@ from src.gui.updater import (
     perform_git_update,
 )
 from src.models import PostProcessAction, RoutingOutcome
-from src.runner import has_module
+from src.runner import _stdout_is_tty, has_module, run_streaming
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE_CONFIG = PROJECT_ROOT / "config.example.toml"
@@ -151,6 +151,14 @@ class GuiAndSettingsTests(unittest.TestCase):
         err_text = stderr_buf.getvalue()
         self.assertIn("PySide6", err_text)
         self.assertIn("requirements-gui.txt", err_text)
+
+    def test_runner_handles_windowless_pythonw_none_stdout(self) -> None:
+        """Under Windows `pythonw.exe`, `sys.stdout` is None; `run_streaming` must not crash on `.isatty()`."""
+        import sys
+
+        with patch.object(sys, "stdout", None):
+            self.assertFalse(_stdout_is_tty())
+            run_streaming([sys.executable, "-c", "print('ok')"], "pythonw smoke test")
 
     @unittest.skipUnless(has_module("PySide6"), "Requires optional PySide6")
     def test_pyside6_main_window_offscreen_smoke(self) -> None:

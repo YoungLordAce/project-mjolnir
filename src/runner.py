@@ -77,6 +77,19 @@ def has_rich() -> bool:
     return has_module("rich")
 
 
+def _stdout_is_tty() -> bool:
+    """Return True if stdout is an interactive TTY (safely False under windowless `pythonw.exe`)."""
+    stream = sys.stdout
+    return bool(stream is not None and hasattr(stream, "isatty") and stream.isatty())
+
+
+def _win_no_window_flags() -> int:
+    """Return `CREATE_NO_WINDOW` on Windows so GUI/pythonw subprocesses never flash console windows."""
+    if sys.platform == "win32":
+        return int(getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    return 0
+
+
 def run_capture(
     cmd: list[str],
     *,
@@ -99,6 +112,9 @@ def run_capture(
         popen_kwargs["text"] = True
         popen_kwargs["encoding"] = "utf-8"
         popen_kwargs["errors"] = "replace"
+    win_flags = _win_no_window_flags()
+    if win_flags:
+        popen_kwargs["creationflags"] = win_flags
 
     proc = subprocess.Popen(cmd, **popen_kwargs)  # type: ignore[call-overload]
     _register_proc(proc)
@@ -132,11 +148,14 @@ def stream_stdout_slice(
     Stream up to `max_bytes` from `cmd`'s stdout into `dest_path`, then terminate the process cleanly.
     Used for fast header-only peeking (`7z e -so`) without extracting multi-GB files.
     """
-    proc = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-    )
+    popen_kwargs: dict[str, object] = {
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.DEVNULL,
+    }
+    win_flags = _win_no_window_flags()
+    if win_flags:
+        popen_kwargs["creationflags"] = win_flags
+    proc = subprocess.Popen(cmd, **popen_kwargs)  # type: ignore[call-overload]
     _register_proc(proc)
     try:
         assert proc.stdout is not None
@@ -172,16 +191,20 @@ def run_streaming(
     or if any fatal `abort_substrings` (such as `chdman` `nan% complete`) appear.
     """
     tail_lines: deque[str] = deque(maxlen=25)
-    use_rich_live = has_rich() and sys.stdout.isatty()
+    use_rich_live = has_rich() and _stdout_is_tty()
     aborted_reason: list[str] = []
 
+    popen_kwargs: dict[str, object] = {
+        "cwd": str(cwd) if cwd else None,
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.STDOUT,
+    }
+    win_flags = _win_no_window_flags()
+    if win_flags:
+        popen_kwargs["creationflags"] = win_flags
+
     try:
-        proc = subprocess.Popen(
-            cmd,
-            cwd=str(cwd) if cwd else None,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
+        proc = subprocess.Popen(cmd, **popen_kwargs)  # type: ignore[call-overload]
     except OSError as exc:
         raise error_cls(f"Failed launching `{cmd[0]}`: {exc}") from exc
 
@@ -297,7 +320,7 @@ def run_psxpackager(
 
     tail_lines: deque[str] = deque(maxlen=30)
     log_offsets: dict[Path, int] = {}
-    use_rich_live = has_rich() and sys.stdout.isatty()
+    use_rich_live = has_rich() and _stdout_is_tty()
 
     def _drain_logs(update_cb: Callable[[str], None]) -> None:
         for log_file in sorted(work_dir.glob("*.log")):
