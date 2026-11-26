@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -573,3 +574,180 @@ def ensure_local_directories(config: PipelineConfig) -> None:
         config.paths.quarantine_dir,
     ):
         folder.mkdir(parents=True, exist_ok=True)
+
+
+def _format_toml_str(value: str, *, prefer_literal: bool = False) -> str:
+    """Format a string safely as a TOML literal (`'...'`) or escaped basic string (`"..."`)."""
+    cleaned = value.strip()
+    if prefer_literal and "'" not in cleaned:
+        return f"'{cleaned}'"
+    escaped = cleaned.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def _replace_toml_key_in_section(
+    toml_text: str,
+    section_header: str,
+    key: str,
+    formatted_value: str,
+) -> str:
+    """
+    Replace `key = ...` inside `[section_header]` while preserving all comments and layout.
+    If the key is missing from an existing section, inserts it at the end of that section.
+    """
+    lines = toml_text.splitlines(keepends=True)
+    target_hdr = f"[{section_header}]"
+    key_rx = re.compile(rf"^{re.escape(key)}\s*=")
+
+    in_section = False
+    found_section = False
+    replaced = False
+    section_end_idx: int | None = None
+    out_lines: list[str] = []
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            if in_section and not replaced:
+                section_end_idx = len(out_lines)
+            in_section = stripped == target_hdr
+            if in_section:
+                found_section = True
+        elif in_section and not replaced and key_rx.match(stripped):
+            eol = "\r\n" if line.endswith("\r\n") else ("\n" if line.endswith("\n") else "")
+            out_lines.append(f"{key} = {formatted_value}{eol}")
+            replaced = True
+            continue
+        out_lines.append(line)
+
+    if not replaced:
+        new_line = f"{key} = {formatted_value}\n"
+        if found_section:
+            insert_at = section_end_idx if section_end_idx is not None else len(out_lines)
+            out_lines.insert(insert_at, new_line)
+        else:
+            if out_lines and not out_lines[-1].endswith("\n"):
+                out_lines[-1] = out_lines[-1] + "\n"
+            out_lines.append(f"\n{target_hdr}\n{new_line}")
+
+    return "".join(out_lines)
+
+
+def save_basic_settings(
+    config_path: Path,
+    platform_key: str,
+    *,
+    watch_dir: str | None = None,
+    library_root: str | None = None,
+    post_process_action: str | None = None,
+) -> Path:
+    """
+    Update core settings (`watch_dir`, `library_root`, `post_process_action`) in `config.toml`
+    while preserving user comments, validating TOML syntax before replacing atomically.
+    """
+    cfg_file = Path(config_path).expanduser().resolve()
+    if not cfg_file.is_file():
+        raise MissingConfigError(_format_missing_config_message(cfg_file))
+
+    text = cfg_file.read_text(encoding="utf-8")
+
+    if post_process_action is not None:
+        action = post_process_action.strip().lower()
+        try:
+            PostProcessAction(action)
+        except ValueError as exc:
+            valid = ", ".join(a.value for a in PostProcessAction)
+            raise ConfigError(
+                f"Invalid `post_process_action` = {action!r}. Must be one of: {valid}"
+            ) from exc
+        text = _replace_toml_key_in_section(
+            text, "general", "post_process_action", _format_toml_str(action)
+        )
+
+    if watch_dir is not None:
+        cleaned_watch = watch_dir.strip()
+        if not cleaned_watch:
+            raise ConfigError("`watch_dir` cannot be empty.")
+        text = _replace_toml_key_in_section(
+            text,
+            "paths",
+            "watch_dir",
+            _format_toml_str(cleaned_watch, prefer_literal=(platform_key == "windows" and "\\" in cleaned_watch)),
+        )
+
+    if library_root is not None:
+        cleaned_lib = library_root.strip()
+        if not cleaned_lib:
+            raise ConfigError("`library_root` cannot be empty.")
+        text = _replace_toml_key_in_section(
+            text,
+            f"paths.{platform_key}",
+            "library_root",
+            _format_toml_str(cleaned_lib, prefer_literal=(platform_key == "windows" and not cleaned_lib.lower().startswith("smb://"))),
+        )
+
+    try:
+        tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        raise ConfigError(f"Generated invalid TOML while saving settings: {exc}") from exc
+
+    tmp_file = cfg_file.with_name(f"~{cfg_file.name}.tmp")
+    try:
+        tmp_file.write_text(text, encoding="utf-8")
+        os.replace(tmp_file, cfg_file)
+    except OSError as exc:
+        tmp_file.unlink(missing_ok=True)
+        raise ConfigError(f"Failed writing `{cfg_file}`: {exc}") from exc
+
+    return cfg_file
+
+
+def save_advanced_settings(
+    config_path: Path,
+    *,
+    general_updates: dict[str, int | float | bool | str] | None = None,
+    conversion_updates: dict[str, int | float | bool | str] | None = None,
+) -> Path:
+    """
+    Update advanced `[general]` and `[conversion]` fields in `config.toml` while preserving
+    user comments, validating both TOML syntax and full `load_config()` rules before writing.
+    """
+    cfg_file = Path(config_path).expanduser().resolve()
+    if not cfg_file.is_file():
+        raise MissingConfigError(_format_missing_config_message(cfg_file))
+
+    def _fmt_toml_val(val: int | float | bool | str) -> str:
+        if isinstance(val, bool):
+            return "true" if val else "false"
+        if isinstance(val, int):
+            return str(val)
+        if isinstance(val, float):
+            return f"{val:.2f}".rstrip("0").rstrip(".") if "." in f"{val:.2f}" else str(val)
+        return _format_toml_str(str(val))
+
+    text = cfg_file.read_text(encoding="utf-8")
+
+    for key, val in (general_updates or {}).items():
+        text = _replace_toml_key_in_section(text, "general", key, _fmt_toml_val(val))
+
+    for key, val in (conversion_updates or {}).items():
+        text = _replace_toml_key_in_section(text, "conversion", key, _fmt_toml_val(val))
+
+    try:
+        tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        raise ConfigError(f"Generated invalid TOML while saving advanced settings: {exc}") from exc
+
+    tmp_file = cfg_file.with_name(f"~{cfg_file.name}.tmp")
+    try:
+        tmp_file.write_text(text, encoding="utf-8")
+        # Validate full schema rules on temp file before replacing the live config.toml
+        load_config(tmp_file)
+        os.replace(tmp_file, cfg_file)
+    except Exception as exc:
+        tmp_file.unlink(missing_ok=True)
+        if isinstance(exc, ConfigError):
+            raise
+        raise ConfigError(f"Failed writing `{cfg_file}`: {exc}") from exc
+
+    return cfg_file

@@ -1,15 +1,32 @@
-# Völundr
+# <img src="docs/assets/logo.svg" alt="Völundr icon" width="36" align="absmiddle"> Völundr
 
 [![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://younglordace.github.io/volundr/)
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue)](LICENSE)
 
-**Drop ROM archives in -> get clean, compressed, emulator-ready games sorted into your library automatically.**
+**Automatic ROM Processor — drop ROM archives in -> get clean, compressed, emulator-ready games sorted into your library automatically.**
 
-Völundr is a cross-platform Python 3.11+ automated ROM ingestion pipeline for **Windows**, **Linux**, and **Docker**. Drop `.zip`, `.7z`, `.rar`, raw disc images, or folders into `./drop` and Völundr identifies the console, converts to the optimal format (`.chd`, `.pbp`, `.rvz`, `.xci`, `.cci`, `.wua`, Vita3K `.zip`), and moves everything safely into your local folder or NAS.
+Völundr is a cross-platform Python 3.11+ automated ROM ingestion pipeline for **Windows**, **Linux**, and **Docker**, available as both a **native Desktop GUI + System Tray app (PySide6 / Qt 6)** and a lightweight headless CLI. Drop `.zip`, `.7z`, `.rar`, raw disc images, or folders into `./drop` and Völundr identifies the console, converts to the optimal format (`.chd`, `.pbp`, `.rvz`, `.xci`, `.cci`, `.wua`, Vita3K `.zip`), and moves everything safely into your local folder or NAS.
 
 **Full Documentation:** [younglordace.github.io/volundr](https://younglordace.github.io/volundr/)
 
-![Völundr Watch Mode](docs/assets/watch.svg)
+![Völundr Desktop GUI — Watch & Activity](docs/assets/gui-watch.png)
+
+<details>
+<summary><strong>More Screenshots (Doctor & Tools, Settings, Setup Wizard, & CLI Watch Mode)</strong></summary>
+
+#### Doctor & Tools
+![Völundr Desktop GUI — Doctor & Tools](docs/assets/gui-doctor.png)
+
+#### Settings & System Tray
+![Völundr Desktop GUI — Settings](docs/assets/gui-settings.png)
+
+#### Guided Setup Wizard
+![Völundr Desktop GUI — Setup Wizard](docs/assets/gui-wizard.png)
+
+#### Headless CLI Watch Mode
+![Völundr CLI Watch Mode](docs/assets/watch.svg)
+
+</details>
 
 ---
 
@@ -28,7 +45,23 @@ Völundr is a cross-platform Python 3.11+ automated ROM ingestion pipeline for *
    It walks you through creating `.venv`, generating `config.toml` with your ROM library folder, downloading official third-party tools into `./tools/` (you can pick **All** or **Choose by console**), auto-creating `./drop`, `./processed`, `./quarantine`, and `./.staging`, and running `main.py doctor` to verify everything.
    *(Want to preview first without downloading anything? Run `python setup_volundr.py --dry-run`.)*
 
-3. **Drop ROMs into `./drop` and start watching:**
+3. **Launch Völundr (Desktop GUI or CLI):**
+
+   **Option A — Desktop GUI & System Tray** *(optional PySide6)*:
+   ```bash
+   # Install optional GUI dependency once
+   # Windows:
+   .\.venv\Scripts\python.exe -m pip install -r requirements-gui.txt
+   .\.venv\Scripts\python.exe main.py gui
+   # (On Windows you can also double-click `volundr_gui.pyw` to launch without a terminal window)
+
+   # Linux / macOS:
+   ./.venv/bin/pip install -r requirements-gui.txt
+   ./.venv/bin/python main.py gui
+   ```
+   *(The GUI includes a built-in **Setup Wizard**, live **Watch & Activity** feed, **Doctor & Tools** diagnostics, **Advanced Settings**, system tray controls, and a one-click **Check for Updates** dialog.)*
+
+   **Option B — Headless CLI:**
    ```bash
    # Windows
    .\.venv\Scripts\python.exe main.py watch
@@ -119,6 +152,7 @@ Supply your own files dumped from hardware you own (everything inside `tools/` i
 
 | Command | What It Does |
 | :--- | :--- |
+| `python main.py gui [--minimized]` | Launches the optional PySide6 Desktop GUI & system tray app (`--autowatch` / `--no-autowatch` overrides saved startup mode) |
 | `python main.py doctor` | Checks Python deps, external tools, disk space, and write access to `library_root` |
 | `python main.py inspect <path...>` | Read-only preview showing detected system and planned action |
 | `python main.py process <path...> [--dry-run]` | Ingest specific file(s) or folder(s) (`--dry-run` previews without changing files) |
@@ -130,6 +164,7 @@ Supply your own files dumped from hardware you own (everything inside `tools/` i
 ## Detailed Documentation
 
 Browse the full documentation site at **[younglordace.github.io/volundr](https://younglordace.github.io/volundr/)** (source in [`docs/`](docs/)) for:
+- **[Desktop GUI](https://younglordace.github.io/volundr/desktop-gui/):** PySide6 desktop app, system tray, graphical Setup Wizard, Advanced Settings, and one-click updater
 - **[Supported Consoles](https://younglordace.github.io/volundr/consoles/):** Per-console conversion rules, multi-disc `.pbp` vs `_discs/` + `.m3u`, CUE healing, Switch donor caching & duplicate update skip, 3DS/Wii U/PS Vita behavior
 - **[Docker & NAS](https://younglordace.github.io/volundr/docker-nas/):** 24/7 headless Docker deployment, Syncthing atomic transfers, and ROMarr two-library integration
 - **[Configuration](https://younglordace.github.io/volundr/configuration/) & [Architecture](https://younglordace.github.io/volundr/architecture/):** Full `config.toml` reference, `src/` module map, and running tests

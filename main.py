@@ -48,7 +48,7 @@ from src.router import (
     group_ingestion_batches,
     parse_multidisc_info,
 )
-from src.runner import has_module as _has_module
+from src.runner import clear_module_cache, has_module as _has_module
 from src.watcher import PipelineWatcher, purge_stale_staging, scan_watch_dir_once
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent / "config.toml"
@@ -74,11 +74,12 @@ def _probe_write_access(directory: Path) -> tuple[bool, str]:
         return False, f"Write/rename failed: {exc}"
 
 
-def run_doctor(config: PipelineConfig) -> int:
-    """Run read-only environment, binary, storage, and NAS connectivity diagnostics."""
+def collect_doctor_checks(config: PipelineConfig) -> list[tuple[str, str, str, str]]:
+    """Run read-only environment, binary, storage, and library checks and return structured rows."""
+    clear_module_cache()
     ensure_local_directories(config)
 
-    # Attempt Fedora GVFS auto-mount if running on Linux with an smb:// URI
+    # Attempt GNOME GVFS auto-mount if running on Linux with an smb:// URI
     resolved_lib_root, smb_note = try_mount_smb_if_needed(config.paths, config.platform_key)
 
     checks: list[tuple[str, str, str, str]] = []  # (Category, Item, Status, Detail)
@@ -220,6 +221,12 @@ def run_doctor(config: PipelineConfig) -> int:
             "Optional: place PSV_GAMES.tsv / PSV_DLCS.tsv in tools/psvita/ for automatic .pkg zRIF/work.bin license generation",
         ))
 
+    return checks
+
+
+def run_doctor(config: PipelineConfig) -> int:
+    """Run read-only environment, binary, storage, and NAS connectivity diagnostics."""
+    checks = collect_doctor_checks(config)
     _render_doctor_report(config, checks)
 
     has_hard_fail = any(status == "FAIL" for _, _, status, _ in checks)
@@ -784,7 +791,55 @@ def build_parser() -> argparse.ArgumentParser:
         help="Ignore files already sitting in watch_dir at startup (only process newly dropped items)",
     )
 
+    # Desktop UI + System Tray (optional PySide6)
+    gui_parser = subparsers.add_parser(
+        "gui",
+        help="Launch the Völundr desktop window and system tray app (requires PySide6)",
+    )
+    gui_parser.add_argument(
+        "--minimized",
+        action="store_true",
+        help="Start hidden in the system tray (when a system tray is available)",
+    )
+    gui_watch_grp = gui_parser.add_mutually_exclusive_group()
+    gui_watch_grp.add_argument(
+        "--autowatch",
+        action="store_true",
+        help="Start Watch mode immediately on launch (overrides the saved GUI setting)",
+    )
+    gui_watch_grp.add_argument(
+        "--no-autowatch",
+        action="store_true",
+        help="Open the window in Paused state (overrides the saved GUI setting)",
+    )
+
     return parser
+
+
+def run_gui(
+    config_path: Path,
+    *,
+    start_minimized: bool = False,
+    auto_watch: bool | None = None,
+) -> int:
+    """Lazy-import PySide6 and launch the desktop UI & system tray."""
+    if not _has_module("PySide6"):
+        print(
+            "[GUI ERROR] PySide6 is not installed in this Python environment.\n"
+            "Install optional desktop GUI dependencies with:\n"
+            "  Windows: .\\.venv\\Scripts\\python.exe -m pip install -r requirements-gui.txt\n"
+            "  Linux:   ./.venv/bin/pip install -r requirements-gui.txt",
+            file=sys.stderr,
+        )
+        return 1
+
+    from src.gui import launch_gui
+
+    return launch_gui(
+        config_path,
+        start_minimized=start_minimized,
+        auto_watch=auto_watch,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -799,6 +854,18 @@ def main(argv: list[str] | None = None) -> int:
 
     command = args.command or "doctor"
     platform_override = getattr(args, "platform", None)
+
+    if command == "gui":
+        auto_watch_override: bool | None = None
+        if args.autowatch:
+            auto_watch_override = True
+        elif args.no_autowatch:
+            auto_watch_override = False
+        return run_gui(
+            args.config,
+            start_minimized=args.minimized,
+            auto_watch=auto_watch_override,
+        )
 
     try:
         config = load_config(args.config, platform_override=platform_override)

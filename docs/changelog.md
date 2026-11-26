@@ -1,7 +1,20 @@
 # Changelog
 
-All notable changes to Völundr are documented here.
+All notable changes to Völundr are documented in this file.
 Versioning follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+
+## [0.3.0] - 2026-11-26
+
+### Added
+- **Optional PySide6 (Qt 6) Desktop GUI & System Tray (`main.py gui` / `volundr_gui.pyw`):** Full dark-themed native desktop UI with a live **Watch & Activity** dashboard, **Doctor & Tools** diagnostics tab, **Settings** & **Advanced Settings** dialogs, system tray icon with live watching/paused status dot, desktop notifications, and windowless Windows launcher (`volundr_gui.pyw`). Kept strictly optional via `requirements-gui.txt` so CLI & Docker builds stay lean.
+- **Graphical First-Time Setup Wizard (`SetupWizardDialog`):** 4-step guided setup dialog powered by `setup_volundr.py` that auto-detects missing/partial CLI tools and Python dependencies, streams download/install progress live, configures `config.toml` without losing comments, and can be reopened anytime from **Settings → Run Setup Wizard...**.
+- **One-Click GitHub Updater (`UpdateDialog`):** Startup update check pill + formatted release notes dialog with safe `git pull --ff-only` update & restart, `ETag` conditional caching, and automatic `releases.atom` fallback when GitHub's unauthenticated API rate limit is hit.
+- **Dedicated Windows Taskbar Icon & Völundr Brand Shield (`docs/assets/logo.svg`):** Sets a dedicated Windows `AppUserModelID` and renders multi-resolution (`16`–`256` px) icons so the Windows taskbar displays Völundr's icon instead of Python's default icon.
+- **Default Paused GUI Startup:** Desktop GUI now opens in **Paused** state by default, with a persistent Settings toggle (*Start watching automatically when Völundr launches*) and `--autowatch` / `--no-autowatch` CLI flags.
+
+### Fixed
+- **Live Doctor Refresh & Runtime Module Cache:** Added `clear_module_cache()` (`importlib.invalidate_caches()` + `has_module.cache_clear()`) and live config re-resolution inside `refresh_doctor()` so newly installed Python dependencies (`pycryptodome`, `pyctr`) or newly placed console keys/tools turn green immediately without restarting the GUI.
+- **Clean Terminal Exit on GUI Close:** Explicitly exits the Qt event loop when closing without tray-minimize and handles `Ctrl+C` (`SIGINT`) cleanly via a Qt timer so launching terminals never hang.
 
 ## [0.2.0] - 2026-11-25
 

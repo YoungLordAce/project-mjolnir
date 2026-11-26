@@ -2,14 +2,15 @@
 
 **Drop ROM archives in → get clean, compressed, emulator-ready games sorted into your library automatically.**
 
-Völundr is a cross-platform Python 3.11+ automated ROM ingestion pipeline for **Windows**, **Linux**, and **Docker**. Drop `.zip`, `.7z`, `.rar`, raw disc images, or folders into `./drop` and Völundr identifies the console via binary headers, converts to the optimal emulator format (`.chd`, `.pbp`, `.rvz`, `.xci`, `.cci`, `.wua`, Vita3K `.zip`), and routes everything atomically into your local drive or NAS.
+Völundr is a cross-platform Python 3.11+ automated ROM ingestion pipeline for **Windows**, **Linux**, and **Docker**, available as both a **native Desktop GUI + System Tray app (PySide6 / Qt 6)** and a lightweight headless CLI. Drop `.zip`, `.7z`, `.rar`, raw disc images, or folders into `./drop` and Völundr identifies the console via binary headers, converts to the optimal emulator format (`.chd`, `.pbp`, `.rvz`, `.xci`, `.cci`, `.wua`, Vita3K `.zip`), and routes everything atomically into your local drive or NAS.
 
-![Völundr Watch Mode](assets/watch.svg)
+![Völundr Desktop GUI](assets/gui-watch.png)
 
 ---
 
 ## Key Highlights
 
+- **Native Desktop GUI & System Tray (Optional):** Dark-themed PySide6 interface with a live Watch & Activity feed, built-in graphical **Setup Wizard**, **Doctor & Tools** diagnostics, **Advanced Settings**, system tray controls, and one-click GitHub updates—while keeping the CLI & Docker images completely headless.
 - **Zero-Extraction Arcade Detection:** Peeks inside `.zip`/`.7z`/`.rar` in memory and sorts arcade sets untouched into `cps1`, `cps2`, `cps3`, `neogeo`, or `fbneo`.
 - **Binary Header & ISO9660 Sniffing:** Inspects magic bytes, `SYSTEM.CNF`, `PSP_GAME`, Wii U `meta.xml`, PS Vita `param.sfo`, and 3DS `NCSD`/`NCCH` encryption flags instead of trusting messy filenames.
 - **Optimal Per-Console Formats:**
@@ -34,6 +35,7 @@ Völundr is a cross-platform Python 3.11+ automated ROM ingestion pipeline for *
 | Guide | What's Inside |
 | :--- | :--- |
 | **[Getting Started](getting-started.md)** | 3-step guided setup (`setup_volundr.py`), manual setup, CLI commands, and Linux tips |
+| **[Desktop GUI](desktop-gui.md)** | PySide6 desktop app, system tray, graphical Setup Wizard, Advanced Settings, and one-click updater |
 | **[Tools & Keys](tools-and-keys.md)** | Official download links for external CLI tools, `tools/` folder map, and user-supplied keys (`prod.keys`, 3DS keys, PSV TSVs) |
 | **[Supported Consoles](consoles.md)** | Detailed conversion, multi-disc, CUE healing, and routing behavior for every console |
 | **[Docker & NAS](docker-nas.md)** | 24/7 headless Docker deployment, volume mounts, Syncthing safety, and ROMarr two-library setup |

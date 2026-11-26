@@ -76,6 +76,7 @@ If you prefer setting up each piece by hand:
 
 | Command | What It Does |
 | :--- | :--- |
+| `python main.py gui [--minimized]` | Launches the optional PySide6 Desktop GUI & system tray app (`--autowatch` / `--no-autowatch`) — see **[Desktop GUI](desktop-gui.md)** |
 | `python main.py doctor` | Read-only diagnostics for Python packages, external tools, disk space, and write/atomic-rename access on `library_root` |
 | `python main.py inspect <path...>` | Read-only archive & header peek showing detected `system_id` and planned conversion action |
 | `python main.py process <path...> [--dry-run] [--keep-source]` | Extract, convert, and route specific file(s) or folder(s) |

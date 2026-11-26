@@ -1,0 +1,7 @@
+# Völundr — Optional Desktop GUI & System Tray Dependencies
+# Install with:
+#   Windows: .\.venv\Scripts\python.exe -m pip install -r requirements-gui.txt
+#   Linux:   ./.venv/bin/pip install -r requirements-gui.txt
+# Kept separate from requirements.txt so headless Linux & Docker images stay lean.
+
+PySide6>=6.7.0

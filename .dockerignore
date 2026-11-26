@@ -23,5 +23,8 @@ site/
 .cache/
 .github/
 zensical.toml
+src/gui/
+volundr_gui.pyw
+requirements-gui.txt
 *.log
 *.tmp

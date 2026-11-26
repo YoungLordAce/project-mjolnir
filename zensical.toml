@@ -9,6 +9,7 @@ copyright = "Copyright &copy; 2026 Völundr Contributors — GNU GPLv3"
 nav = [
     { "Home" = "index.md" },
     { "Getting Started" = "getting-started.md" },
+    { "Desktop GUI" = "desktop-gui.md" },
     { "Tools & Keys" = "tools-and-keys.md" },
     { "Supported Consoles" = "consoles.md" },
     { "Docker & NAS" = "docker-nas.md" },
@@ -20,6 +21,8 @@ nav = [
 [project.theme]
 variant = "modern"
 language = "en"
+logo = "assets/logo.svg"
+favicon = "assets/logo.svg"
 features = [
     "navigation.instant",
     "navigation.instant.prefetch",

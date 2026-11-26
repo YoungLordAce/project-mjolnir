@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 import functools
+import importlib
 import importlib.util
 import os
 from pathlib import Path
@@ -63,6 +64,12 @@ def terminate_active_subprocesses(grace_seconds: float = 2.0) -> None:
 def has_module(module_name: str) -> bool:
     """Return True if `module_name` is importable in the active Python environment."""
     return importlib.util.find_spec(module_name) is not None
+
+
+def clear_module_cache() -> None:
+    """Invalidate Python's import finder caches and `has_module` LRU cache (e.g. after runtime pip install)."""
+    importlib.invalidate_caches()
+    has_module.cache_clear()
 
 
 def has_rich() -> bool:
