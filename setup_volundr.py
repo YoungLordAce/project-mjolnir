@@ -599,10 +599,25 @@ def _install_psxpackager(project_root: Path, platform_key: str, arch: str, force
 
 
 def _find_latest_dolphin_win_url() -> str | None:
-    """Discover the latest Windows x64 `.7z` download URL from official `dolphin-emu.org/download/`."""
-    html = _fetch_text("https://dolphin-emu.org/download/")
-    matches = re.findall(r"https://dl\.dolphin-emu\.org/releases/[^\s\"'<>]+-x64\.7z", html)
-    return matches[0] if matches else None
+    """
+    Discover the latest Dolphin Windows x64 `.7z` download URL using Dolphin's official
+    JSON update API (`https://dolphin-emu.org/update/latest/beta`), falling back to the
+    download page only if needed.
+    """
+    try:
+        meta = _fetch_json("https://dolphin-emu.org/update/latest/beta")
+        shortrev = str(meta.get("shortrev") or meta.get("version") or "").strip()
+        if shortrev and re.fullmatch(r"[A-Za-z0-9._-]+", shortrev):
+            return f"https://dl.dolphin-emu.org/releases/{shortrev}/dolphin-{shortrev}-x64.7z"
+    except Exception:
+        pass
+
+    try:
+        html = _fetch_text("https://dolphin-emu.org/download/")
+        matches = re.findall(r"https://dl\.dolphin-emu\.org/releases/[^\s\"'<>]+-x64\.7z", html)
+        return matches[0] if matches else None
+    except Exception:
+        return None
 
 
 def _install_dolphin(project_root: Path, platform_key: str, arch: str, force: bool, dry_run: bool) -> ToolStepResult:
@@ -768,7 +783,14 @@ def _install_psvita(project_root: Path, platform_key: str, arch: str, force: boo
         repo="lusid1/pkg2zip",
         exe_name="pkg2zip.exe",
         dest_file=project_root / "tools" / "psvita" / "pkg2zip.exe",
-        asset_patterns=(r"pkg2zip.*win64.*\.zip$", r"pkg2zip.*x64.*\.zip$", r"pkg2zip.*win.*\.zip$"),
+        asset_patterns=(
+            r"pkg2zip.*win64.*\.zip$",
+            r"pkg2zip.*x64.*\.zip$",
+            r"pkg2zip.*win.*\.zip$",
+            r"^pkg2zip\.zip$",
+            r"pkg2zip.*\.zip$",
+        ),
+        exclude_patterns=(r"linux", r"mac", r"darwin", r"arm", r"source"),
         platform_key=platform_key,
         force=force,
         dry_run=dry_run,
@@ -881,7 +903,11 @@ def install_selected_tools(
         try:
             outcome = handlers[tid](project_root, platform_key, arch, force, dry_run)
         except urllib.error.HTTPError as exc:
-            note = "GitHub API rate limit hit (HTTP 403) — try again later or download from README.md" if exc.code == 403 else f"HTTP error {exc.code}: {exc.reason}"
+            err_url = str(getattr(exc, "url", "") or getattr(exc, "filename", "") or "").lower()
+            if exc.code in (403, 429) and "github.com" in err_url:
+                note = "GitHub API rate limit hit (HTTP 403) — try again later or download from README.md"
+            else:
+                note = f"HTTP error {exc.code}: {exc.reason}"
             outcome = ToolStepResult(tid, "failed", note)
         except Exception as exc:
             outcome = ToolStepResult(tid, "failed", str(exc))

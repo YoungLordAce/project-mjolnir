@@ -6,7 +6,7 @@ from pathlib import Path
 import threading
 
 from PySide6.QtCore import QObject, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QColor, QDesktopServices, QFont, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -265,10 +265,11 @@ class UpdateDialog(QDialog):
         self._notes_view.setOpenExternalLinks(True)
         self._notes_view.setPlaceholderText("Release notes will appear here...")
         self._notes_view.document().setDefaultStyleSheet(
+            "body { color: #dbe3f2; font-family: 'Segoe UI', 'Inter', sans-serif; font-size: 13px; }"
             "h1, h2, h3 { color: #f4f7ff; margin-top: 8px; margin-bottom: 4px; }"
             "ul, ol { margin-top: 2px; margin-bottom: 8px; }"
-            "li { margin-bottom: 5px; line-height: 135%; }"
-            "code { background-color: #1c2333; color: #7dd3fc; font-family: 'Cascadia Mono', Consolas, monospace; font-size: 12px; }"
+            "li { margin-bottom: 6px; line-height: 140%; }"
+            "code, tt, pre { background-color: #1c2333; color: #7dd3fc; font-family: Consolas, 'Cascadia Mono', 'DejaVu Sans Mono', monospace; font-size: 13px; }"
             "a { color: #60a5fa; }"
             "strong, b { color: #f1f5f9; }"
         )
@@ -336,6 +337,7 @@ class UpdateDialog(QDialog):
                     else f"## {res.release_title}"
                 )
                 self._notes_view.setMarkdown(notes_md)
+            self._style_inline_code_fragments()
             self._btn_update.setEnabled(True)
         else:
             self._lbl_status.setText(
@@ -348,8 +350,34 @@ class UpdateDialog(QDialog):
             else:
                 notes_md = res.release_notes or f"Latest published release: **{res.release_title}**"
                 self._notes_view.setMarkdown(notes_md)
+            self._style_inline_code_fragments()
             self._btn_update.setText("Update")
             self._btn_update.setEnabled(False)
+
+    def _style_inline_code_fragments(self) -> None:
+        """Restyle Qt Markdown/HTML fixed-pitch fragments from bitmap Courier to crisp Consolas pills."""
+        doc = self._notes_view.document()
+        code_font = QFont("Consolas", 9)
+        code_font.setStyleHint(QFont.StyleHint.Monospace)
+        code_fmt = QTextCharFormat()
+        code_fmt.setFont(code_font)
+        code_fmt.setForeground(QColor("#7dd3fc"))
+        code_fmt.setBackground(QColor("#222b3d"))
+
+        cursor = QTextCursor(doc)
+        cursor.beginEditBlock()
+        block = doc.begin()
+        while block.isValid():
+            it = block.begin()
+            while not it.atEnd():
+                frag = it.fragment()
+                if frag.isValid() and frag.charFormat().fontFixedPitch():
+                    cursor.setPosition(frag.position())
+                    cursor.setPosition(frag.position() + frag.length(), QTextCursor.MoveMode.KeepAnchor)
+                    cursor.mergeCharFormat(code_fmt)
+                it += 1
+            block = block.next()
+        cursor.endEditBlock()
 
     def _start_apply_update(self) -> None:
         self._btn_update.setEnabled(False)

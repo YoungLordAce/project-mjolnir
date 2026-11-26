@@ -45,6 +45,15 @@ from src.models import PostProcessAction
 from src.runner import clear_module_cache, has_module
 
 
+def _code(text: str) -> str:
+    """Format an inline code/path pill using crisp ClearType Consolas instead of Qt's bitmap Courier."""
+    return (
+        "<span style=\"font-family: Consolas, 'Cascadia Mono', 'DejaVu Sans Mono', monospace; "
+        "font-size: 12px; color: #7dd3fc; background-color: #222b3d;\">"
+        f"&nbsp;{text}&nbsp;</span>"
+    )
+
+
 def detect_tool_install_status(project_root: Path, platform_key: str) -> dict[str, tuple[str, str]]:
     """
     Probe each tool group in `setup_volundr.TOOL_GROUPS` and return
@@ -284,7 +293,7 @@ class SetupWizardDialog(QDialog):
 
         intro = QLabel(
             "Configure where Völundr watches for incoming ROMs and where it writes your "
-            "converted, emulator-ready library. Existing comments in <code>config.toml</code> "
+            f"converted, emulator-ready library. Existing comments in {_code('config.toml')} "
             "are preserved safely."
         )
         intro.setWordWrap(True)
@@ -336,7 +345,7 @@ class SetupWizardDialog(QDialog):
         layout.setSpacing(10)
 
         desc = QLabel(
-            "Choose which official upstream CLI tools to fetch into <code>./tools/</code>. "
+            f"Choose which official upstream CLI tools to fetch into {_code('./tools/')}. "
             "Missing or incomplete tools are pre-selected automatically; tools already installed "
             "are skipped unless you enable re-download."
         )
@@ -474,13 +483,15 @@ class SetupWizardDialog(QDialog):
         layout.addWidget(self._lbl_finish_summary)
 
         keys_card = QLabel(
-            "<b>User-Supplied Console Keys Reminder</b><br><br>"
+            "<div style='line-height: 155%;'>"
+            "<b style='color: #f4f7ff;'>User-Supplied Console Keys Reminder</b><br><br>"
             "Völundr <b>never</b> downloads copyrighted console keys or license databases. "
             "If you process encrypted titles for these systems, copy your own legally dumped files to:<br>"
-            "• <b>Nintendo Switch:</b> <code>tools/nscb/ztools/prod.keys</code> "
-            "(or <code>~/.switch/prod.keys</code> — auto-synced to <code>keys.txt</code>)<br>"
-            "• <b>Nintendo 3DS:</b> <code>tools/3ds/aes_keys.txt</code> or <code>tools/3ds/boot9.bin</code><br>"
-            "• <b>PlayStation Vita:</b> <code>tools/psvita/PSV_GAMES.tsv</code> (optional)"
+            f"• <b>Nintendo Switch:</b> {_code('tools/nscb/ztools/prod.keys')} "
+            f"(or {_code('~/.switch/prod.keys')} — auto-synced to {_code('keys.txt')})<br>"
+            f"• <b>Nintendo 3DS:</b> {_code('tools/3ds/aes_keys.txt')} or {_code('tools/3ds/boot9.bin')}<br>"
+            f"• <b>PlayStation Vita:</b> {_code('tools/psvita/PSV_GAMES.tsv')} (optional)"
+            "</div>"
         )
         keys_card.setObjectName("InfoStrip")
         keys_card.setWordWrap(True)
@@ -509,7 +520,7 @@ class SetupWizardDialog(QDialog):
     def _load_initial_values(self) -> None:
         if self.config_path.is_file():
             self._lbl_config_note.setText(
-                f"<b>Existing configuration detected:</b> <code>{self.config_path.name}</code> "
+                f"<b>Existing configuration detected:</b> {_code(self.config_path.name)} "
                 "(only the paths below will be updated; all other settings & comments stay intact)."
             )
             try:
@@ -524,8 +535,8 @@ class SetupWizardDialog(QDialog):
                 pass
         else:
             self._lbl_config_note.setText(
-                f"<b>First-time setup:</b> <code>{self.config_path.name}</code> will be created "
-                "from <code>config.example.toml</code> with the folders you choose below."
+                f"<b>First-time setup:</b> {_code(self.config_path.name)} will be created "
+                f"from {_code('config.example.toml')} with the folders you choose below."
             )
 
         self._edit_watch_dir.setText(str(self.project_root / "drop"))

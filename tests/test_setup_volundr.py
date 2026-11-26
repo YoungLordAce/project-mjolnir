@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import tomllib
 import unittest
+from unittest.mock import patch
 import zipfile
 
 import setup_volundr as sm
@@ -95,6 +96,29 @@ class SetupVolundrTests(unittest.TestCase):
         assert asset is not None
         self.assertEqual(asset.name, "psxpackager-win-x64.zip")
         self.assertEqual(asset.url, "https://example.invalid/cli.zip")
+
+        # Verify `pkg2zip.zip` (lusid1/pkg2zip Windows asset) matches cleanly
+        pkg2zip_release = {
+            "html_url": "https://github.com/lusid1/pkg2zip/releases/tag/v2.3",
+            "assets": [
+                {"name": "pkg2zip.zip", "browser_download_url": "https://example.invalid/pkg2zip.zip"},
+            ],
+        }
+        p2z_asset = sm.pick_github_release_asset(
+            pkg2zip_release,
+            (r"pkg2zip.*win64.*\.zip$", r"^pkg2zip\.zip$", r"pkg2zip.*\.zip$"),
+            exclude_patterns=(r"linux", r"mac", r"darwin", r"arm", r"source"),
+        )
+        self.assertIsNotNone(p2z_asset)
+        assert p2z_asset is not None
+        self.assertEqual(p2z_asset.name, "pkg2zip.zip")
+
+        # Verify Dolphin JSON update API constructs the official x64 .7z URL
+        with patch.object(sm, "_fetch_json", return_value={"shortrev": "2609b"}):
+            self.assertEqual(
+                sm._find_latest_dolphin_win_url(),
+                "https://dl.dolphin-emu.org/releases/2609b/dolphin-2609b-x64.7z",
+            )
 
     def test_safe_extract_zip_blocks_traversal_and_extracts_valid(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
