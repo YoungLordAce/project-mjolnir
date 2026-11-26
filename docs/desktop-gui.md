@@ -8,27 +8,14 @@ Völundr includes an optional native **PySide6 (Qt 6)** desktop application and 
 
 ## Installing & Launching
 
-Install the optional GUI dependency inside your `.venv`:
+### Windows (One-Click Launcher — Easiest)
+Double-click **`Start Volundr.bat`** in your `volundr` folder. On first run it automatically creates `.venv`, installs `requirements.txt` + `requirements-gui.txt`, and launches Völundr windowless (with the built-in **Setup Wizard** guiding you through folders and external tools).
 
+*(If you already set up `.venv`, you can also launch directly via `volundr_gui.pyw` or `.\.venv\Scripts\python.exe main.py gui`.)*
+
+### Linux / macOS
 ```bash
-# Windows (PowerShell)
-.\.venv\Scripts\python.exe -m pip install -r requirements-gui.txt
-
-# Linux / macOS
 ./.venv/bin/pip install -r requirements-gui.txt
-```
-
-Launch the desktop window:
-
-```bash
-# Windows (from terminal)
-.\.venv\Scripts\python.exe main.py gui
-
-# Windows (windowless — no console window)
-# Double-click `volundr_gui.pyw` or run:
-.\.venv\Scripts\pythonw.exe volundr_gui.pyw
-
-# Linux / macOS
 ./.venv/bin/python main.py gui
 ```
 

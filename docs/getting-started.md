@@ -1,8 +1,33 @@
 # Getting Started
 
-## Guided Setup (Recommended — 3 Steps)
+## Desktop App (Recommended — Easiest)
 
 Requires **Python 3.11+**.
+
+### Windows
+1. **Clone the repository:**
+   ```powershell
+   git clone https://github.com/YoungLordAce/volundr.git
+   ```
+2. **Double-click `Start Volundr.bat`** inside the `volundr` folder.
+   - Automatically creates `.venv` and installs all Python & GUI dependencies on first run.
+   - Launches Völundr's built-in **Setup Wizard** to choose your ROM library folder and install external CLI tools automatically.
+3. Click **Start Watching** (or **Scan Now**) and drop ROMs into `./drop`!
+
+### Linux / macOS
+```bash
+git clone https://github.com/YoungLordAce/volundr.git
+cd volundr
+python3 -m venv .venv
+./.venv/bin/pip install -r requirements.txt -r requirements-gui.txt
+./.venv/bin/python main.py gui
+```
+
+---
+
+## Headless CLI Guided Setup (3 Steps)
+
+Running on a server or prefer the terminal without PySide6? Use the stdlib-only setup script:
 
 1. **Clone the repository:**
    ```bash

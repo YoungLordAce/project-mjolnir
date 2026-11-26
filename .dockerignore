@@ -25,6 +25,7 @@ site/
 zensical.toml
 src/gui/
 volundr_gui.pyw
+Start Volundr.bat
 requirements-gui.txt
 *.log
 *.tmp
